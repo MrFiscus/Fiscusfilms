@@ -1,0 +1,1009 @@
+*{
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
+  text-decoration: none ;
+}
+
+:root{
+--md-dark-color: rgb(65, 90, 119);
+--dark-color: rgb(27, 38, 59);
+--light-dark-color: rgb(119, 141, 169);
+--primary-color:rgb(13, 27, 42);
+--white-color:rgb(224, 225, 221);
+
+}
+
+body{
+background-color: var(--primary-color);
+overflow-x: hidden;
+
+  overflow-y: scroll;
+
+}
+.body-poster{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster1{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster2{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://themarcofeed.wordpress.com/wp-content/uploads/2015/04/maxresdefault.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster3{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster4{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster5{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster6{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster7{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+.body-poster8{
+  width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://static1.srcdn.com/wordpress/wp-content/uploads/2021/02/500-Days-of-Summer-Cropped.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  
+}
+
+
+.logo{
+  display: flex;
+
+}
+#logo{
+  width: 40px;
+  height: 40px;
+  scale: 0.9;
+  padding-top: 8px;
+  padding-left: 10px;
+
+}
+
+#title{
+  color: rgb(221, 219, 219);
+  padding: 5px;
+  padding-left: 7px;
+  font-family: "Oswald", sans-serif;
+  font-weight: lighter;
+}
+.nav-bar{
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+padding: 5px 40px;
+position: sticky;
+top: 0;
+z-index: 9999;
+background-color: transparent ;
+transition: background-color 0.3s ease;
+
+}
+.nav-colored { background-color: var(--dark-color);}
+.nav-transparent {background-color: transparent; }
+
+.nav-bar-sub{
+  display: flex;
+  width: 60%;
+  text-decoration:none;
+  list-style-type: none;
+  font-size: 25px;
+ justify-content: end;
+ position: relative;
+ 
+}
+
+
+.searchbox{
+  padding: 5px 0px;
+ 
+}
+
+/* From Uiverse.io by WhiteNervosa */ 
+.nav-bar-buttons {
+  font-size: 20px;
+  color: var(--white-color);
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  position: relative;
+  border: none;
+  background: none;
+  text-transform: uppercase;
+  transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition-duration: 400ms;
+  transition-property: color;
+  padding: 10px 0px;  
+}
+
+.nav-bar-buttons:focus,
+.nav-bar-buttons:hover {
+  color: #a4a1a1;
+}
+
+.nav-bar-buttons:focus:after,
+.nav-bar-buttons:hover:after {
+  width: 100%;
+  left: 0%;
+}
+
+.nav-bar-buttons:after {
+  content: "";
+  pointer-events: none;
+  bottom: 12px;
+  left: 50%;
+  position: absolute;
+  width: 0%;
+  height: 3px;
+  background-color: #ffffff;
+  transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition-duration: 400ms;
+  transition-property: width, left;
+}
+
+
+.nav-bar-buttons{
+  color: white;
+  font-size: medium;
+
+}
+
+.nav-bar-text{
+  color: rgb(196, 196, 195) !important;
+}
+
+.nav-bar-subbuttons{
+  padding: 15px;
+}
+
+/* From Uiverse.io by vnuny */ 
+.container {
+  position: relative;
+  box-sizing: border-box;
+  width: fit-content;
+  padding-top: 8px ;
+}
+
+.mainbox {
+  box-sizing: border-box;
+  position: relative;
+  width: 230px;
+  height: 40px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: center;
+  border-radius: 160px;
+  background-color: rgba(255, 255, 255, 0.439) ;
+  transition: all 0.3s ease;
+  scale: 0.9;
+}
+
+.checkbox:focus {
+  border: none;
+  outline: none;
+}
+
+.checkbox:checked {
+  right: 10px;
+}
+
+.checkbox:checked ~ .mainbox {
+  width: 50px;
+}
+
+.checkbox:checked ~ .mainbox .search_input {
+  width: 0;
+  height: 0px;
+}
+
+.checkbox:checked ~ .mainbox .iconContainer {
+  padding-right: 8px;
+}
+
+.checkbox {
+  box-sizing: border-box;
+  width: 25px;
+  height: 25px;
+  position: absolute;
+  right: 17px;
+  top: 10px;
+  z-index: 9;
+  cursor: pointer;
+  appearance: none;
+}
+
+.search_input {
+  box-sizing: border-box;
+  height: 100%;
+  width: 170px;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  padding-bottom: 4px;
+  padding-left: 10px;
+  font-size: 1em;
+  color: white;
+  transition: all 0.3s ease;
+  font-family:"Oswald", sans-serif;
+  font-weight: 200;
+  scale: 0.8;
+}
+
+.search_input::placeholder {
+  color: rgba(255, 255, 255, 0.776);
+}
+
+.iconContainer {
+  box-sizing: border-box;
+  padding-top: 5px;
+  width: fit-content;
+  transition: all 0.3s ease;
+}
+
+.search_icon {
+  box-sizing: border-box;
+  fill: white;
+  font-size: 1.3em;
+  scale: 0.8;
+}
+
+.searchbox{
+  scale: 0.7;
+  
+}
+.body-button {
+  --primary-color: var(--md-dark-color);
+  --secondary-color: #fff;
+  --hover-color:  var(--dark-color);
+  --arrow-width: 10px;
+  --arrow-stroke: 2px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 20px;
+  color: var(--secondary-color);
+  padding: 1em 1.8em;
+  background: var(--primary-color);
+  display: flex;
+  transition: 0.2s background;
+  align-items: center;
+  gap: 0.6em;
+  font-weight: bold;
+}
+
+.body-button .arrow-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.body-button .arrow {
+  margin-top: 1px;
+  width: var(--arrow-width);
+  background: var(--primary-color);
+  height: var(--arrow-stroke);
+  position: relative;
+  transition: 0.2s;
+}
+
+.body-button .arrow::before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  border: solid var(--secondary-color);
+  border-width: 0 var(--arrow-stroke) var(--arrow-stroke) 0;
+  display: inline-block;
+  top: -3px;
+  right: 3px;
+  transition: 0.2s;
+  padding: 3px;
+  transform: rotate(-45deg);
+}
+
+.body-button:hover {
+  background-color: var(--hover-color);
+}
+
+.body-button:hover .arrow {
+  background: var(--secondary-color);
+}
+
+.body-button:hover .arrow:before {
+  right: 0;
+}
+ 
+.body-main{
+  display: flex;
+  flex-direction: column;
+ justify-content: center;
+ width: 80vw;
+ height: 84vh;
+ padding-left: 7vw;
+ position: relative;
+}
+
+
+/* From Uiverse.io by Nawsome */ 
+.arrow {
+  cursor: pointer;
+  height: 60px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  transition: transform 0.1s;
+  width: 50px;
+}
+
+.arrow-top, .arrow-bottom {
+  background-color: var(--white-color);
+  height: 4px;
+  left: -5px;
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  
+}
+
+.arrow-top:after, .arrow-bottom:after {
+  background-color: var(--md-dark-color);
+  content: "";
+  height: 100%;
+  position: absolute;
+  top: 0;
+  transition: all 0.15s;
+}
+
+.arrow-top {
+  transform: rotate(45deg);
+  transform-origin: bottom right;
+}
+
+.arrow-top:after {
+  left: 100%;
+  right: 0;
+  transition-delay: 0s;
+}
+
+.arrow-bottom {
+  transform: rotate(-45deg);
+  transform-origin: top right;
+}
+
+.arrow-bottom:after {
+  left: 0;
+  right: 100%;
+  transition-delay: 0.15s;
+}
+
+.arrow:hover .arrow-top:after {
+  left: 0;
+  transition-delay: 0.15s;
+}
+
+.arrow:hover .arrow-bottom:after {
+  right: 0;
+  transition-delay: 0s;
+}
+
+.arrow:active {
+  transform: translateX(-50%) translateY(-50%) scale(0.9);
+}
+
+#prev-slide {
+  z-index: 10;
+  top: 40vh;
+  left: 4vw;
+  position:absolute;
+  scale: 0.5;
+  transform: rotate(-180deg);
+}
+
+
+#next-slide {
+  
+  top: 40vh;
+  position:absolute;
+  scale: 0.5;
+  left: 96vw;
+}
+
+
+
+.body-title,.body-description,.body-rating{
+  color: rgb(208, 207, 207);
+  padding-left: 60px;
+}
+
+.body-title{
+  font-size: 25px;
+  font-weight: bold;
+  padding-bottom: 10px;
+
+}
+.body-rating{
+  font-size: 10px;
+  color: rgb(47, 135, 48);
+  font-weight:lighter;
+  width: 20vw;
+  padding-bottom: 5px;
+
+}
+.body-description{
+  width: 50vw;
+  font-family: "Oswald", sans-serif;
+  font-weight: 300;
+  font-size: 18px;
+}
+
+.body-buttons{
+  display: flex;
+  flex-direction: row;
+  padding-left: 60px;
+  padding-top: 15px;
+
+}
+.body-button{
+  margin-right: 10px;
+}
+.button-body-text{
+  color: rgb(223, 221, 221);
+}
+
+.body-button2{
+  border: 2px solid var(--light-dark-color);
+  color:rgb(218, 210, 210);
+  padding: 15px;
+  border-radius: 15px;
+  font-weight: bold ;
+  background-color: transparent ;
+  color:black;
+  
+}
+
+
+.body-button2:hover{
+  background-color: var(--light-dark-color);
+  color:rgb(212, 208, 208);
+  transition: 0.35s;
+
+}
+.body-main-gradient{
+  background-image:linear-gradient(0deg, rgba(0, 0, 0, 0.955) 0%, rgba(0, 0, 0, 0.469) 77%, rgba(0, 0, 0, 0.051) 100%) ;
+  height: 60vh;
+  
+  
+}
+
+
+/* Styling for Popular Movies title */
+#movie-recomen-title {
+  z-index: 1;
+  color: rgb(201, 198, 198);
+  position: relative;
+  top: -13vh;
+  padding-left: 60px;
+  font-size: 25px;
+  font-family: "Oswald", sans-serif;
+  font-weight: 300;
+}
+
+/* Container for the entire slider section */
+.movie-recomen-body {
+  background-color: var(--primary-color);
+  height: 35vh;
+  width: 100vw;
+}
+
+/* Container for the movie posters with arrows */
+.slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Movie list styling */
+.movie-recomen-moviesbox {
+  width: 94vw;
+  height: 42vh;
+  margin: 0 auto;
+  top: -12vh;
+  position:absolute;
+  padding: 0px 10vw;
+  overflow-x: hidden;
+}
+
+/* Movie poster list styling */
+.movie-list {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+/* Styling each movie poster box */
+.movie-poster-box {
+  width: 14vw; /* Adjust width to make posters smaller */
+  margin-right: 8px; /* Space between posters */
+
+}
+
+/* Adjust images inside posters */
+.recon-poster {
+  width:14vw;
+  height: 40vh;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Navigation button styling */
+.slider-button {
+  background-color: var(--light-dark-color);
+  opacity: 0.60;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  font-size: 18px;
+  position: absolute;
+  top: 10vh;
+  transform: translateY(-50%);
+  z-index: 2;
+  border-radius: 60%;
+  scale: 0.8;
+}
+
+/* Position for previous button */
+#recom-prev-slide {
+  left: 15px;
+}
+
+/* Position for next button */
+#recom-next-slide {
+  right: 15px;
+}
+
+/* Optional: Customize pagination bullets */
+.swiper-pagination-bullet {
+  background: #ffffff00;
+}
+
+
+
+
+/* series recomen */
+
+.series-recomen-body {
+  background-color: var(--primary-color);
+  height: 50vh;
+  width: 100vw;
+}
+.series-recomen-seriesbox {
+  width: 94vw;
+  height: 42vh;
+  margin: 0 auto;
+  padding: 0px 10vw;
+  
+}
+
+.series-list {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+
+/* Position for previous button */
+#series-prev-slide {
+  left: 15px;
+}
+
+/* Position for next button */
+#series-next-slide {
+  right: 15px;
+}
+
+#series-recomen-title {
+  z-index: 1;
+  color: rgb(201, 198, 198);
+  position: relative;
+  padding-left: 60px;
+  font-size: 25px;
+  font-family: "Oswald", sans-serif;
+  font-weight: 300;
+  padding-bottom: 10px;
+  padding-top: 20px;
+}
+
+.series-slider-button {
+  background-color: var(--light-dark-color);
+  opacity: 0.60;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  font-size: 18px;
+  position: absolute;
+  top: 20vh;
+  transform: translateY(-50%);
+  z-index: 2;
+  border-radius: 60%;
+  scale: 0.8;
+  
+}
+
+/* fiscus recomen */
+
+.fiscus-recomen-body {
+  background-color: var(--primary-color);
+  height: 55vh;
+  width: 100vw;
+}
+.fiscus-recomen-seriesbox {
+  width: 94vw;
+  height: 42vh;
+  margin: 0 auto;
+  padding: 0px 10vw;
+  
+}
+
+.fiscus-list {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+
+/* Position for previous button */
+#fiscus-prev-slide {
+  left: 15px;
+}
+
+/* Position for next button */
+#fiscus-next-slide {
+  right: 15px;
+}
+
+#fiscus-recomen-title {
+  z-index: 1;
+  color: rgb(201, 198, 198);
+  position: relative;
+  padding-left: 60px;
+  font-size: 25px;
+  font-family: "Oswald", sans-serif;
+  font-weight: 300;
+  padding-bottom: 10px;
+  padding-top: 20px;
+}
+
+.fiscus-slider-button {
+  background-color: var(--light-dark-color);
+  opacity: 0.60;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  font-size: 18px;
+  position: absolute;
+  top: 20vh;
+  transform: translateY(-50%);
+  z-index: 2;
+  border-radius: 60%;
+  scale: 0.8;
+  
+}
+
+/* searchbox */
+
+.search-container{
+background-color: var(--md-dark-color);
+height: 300px;
+display: -webkit-box;
+display: -ms-flexbox;
+display: flex;
+-webkit-box-align: center;
+    -ms-flex-align: center;
+        align-items: center;
+-webkit-box-pack: center;
+    -ms-flex-pack: center;
+        justify-content: center;
+}
+.search-element{
+display: -webkit-box;
+display: -ms-flexbox;
+display: flex;
+-webkit-box-align: stretch;
+    -ms-flex-align: stretch;
+        align-items: stretch;
+-webkit-box-pack: center;
+    -ms-flex-pack: center;
+        justify-content: center;
+-webkit-box-orient: vertical;
+-webkit-box-direction: normal;
+    -ms-flex-direction: column;
+        flex-direction: column;
+position: relative;
+}
+.search-element h3{
+-ms-flex-item-align: center;
+    align-self: center;
+margin-right: 1rem;
+font-size: 2rem;
+color: #fff;
+font-weight: 500;
+margin-bottom: 1.5rem;
+}
+.search-element .form-control{
+padding: 1rem 2rem;
+font-size: 1.4rem;
+border: none;
+border-top-left-radius: 3px;
+border-bottom-left-radius: 3px;
+outline: none;
+color: var(--light-dark-color);
+width: 350px;
+}
+.search-list{
+position: absolute;
+right: 0;
+top: 100%;
+max-height: 500px;
+overflow-y: scroll;
+z-index: 10;
+}
+.search-list .search-list-item{
+background-color: var(--dark-color);
+padding: 0.5rem;
+border-bottom: 1px solid var(--dark-color);
+width: calc(350px - 8px);
+color: #fff;
+cursor: pointer;
+-webkit-transition: background-color 200ms ease;
+-o-transition: background-color 200ms ease;
+transition: background-color 200ms ease;
+}
+.search-list .search-list-item:Hover{
+background-color: var(--primary-color);
+}
+.search-list-item{
+display: -webkit-box;
+display: -ms-flexbox;
+display: flex;
+-webkit-box-align: center;
+    -ms-flex-align: center;
+        align-items: center;
+}
+.search-item-thumbnail img{
+width: 40px;
+margin-right: 1rem;
+}
+.search-item-info h3{
+font-weight: 600;
+font-size: 1rem;
+}
+.search-item-info p{
+font-size: 0.8rem;
+margin-top: 0.5rem;
+font-weight: 600;
+opacity: 0.6;
+}
+
+/* thumbnail */
+.search-list::-webkit-scrollbar{
+width: 8px;
+}
+.search-list::-webkit-scrollbar-track{
+-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+.search-list::-webkit-scrollbar-thumb{
+background-color: var(--primary-color);
+outline: none;
+border-radius: 10px;
+}
+
+/* js related class */
+.hide-search-list{
+display: none;
+}
+
+
+
+/* movie details */
+
+.body-movie-poster{
+width: 100%;
+  height: 100vh;
+  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://t4.ftcdn.net/jpg/08/58/69/13/360_F_858691375_iASliDBLyB3vOVNH2iIHaabhIkNxKGZD.jpg);
+
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+#movie-details-container{
+display: flex;
+flex-direction: row;
+color: white ;
+height: 80vh;
+justify-content: space-around;
+padding: 10vh 10vw;
+}
+
+.movie-main{
+display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  height: 80vh;
+}
+.movie-poster{
+width: 30%;
+height: 100%;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+color: white;
+}
+
+.movie-poster img{
+margin: 0 auto;
+border: 4px solid #fff;
+scale: 0.8;
+}
+.movie-info{
+text-align: center;
+color: #fff;
+padding-top: 3rem;
+text-align: left;
+width: 50vw;
+}
+
+/* movie info stylings */
+.movie-title{
+font-size: 2rem;
+color: var(--white-color);
+}
+.movie-misc-info{
+list-style-type: none;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+padding: 12px 0px;
+}
+.movie-info .year{
+font-weight: 500;
+padding: 5px;
+}
+.movie-info .rated{
+background-color: var(--md-dark-color);
+padding: 5px;
+border-radius: 3px;
+font-weight: 600;
+margin-left: 5px;
+}
+.movie-info .released{
+font-size: 0.9rem;
+padding: 5px;
+margin-left: 5px;
+}
+.movie-info .writer{
+padding-bottom: 10px;
+
+}
+.movie-info .genre{
+background-color: #233453;
+display: inline-block;
+padding: 0.5rem;
+border-radius: 3px;
+margin-bottom: 10px;
+
+}
+.movie-info .plot{
+
+width: 80%;
+padding: 10px 0px;
+}
+.movie-info .language{
+color: var(--white-color);
+font-style: italic;
+}
+.movie-info .awards{
+font-weight: 300;
+font-size: 0.9rem;
+margin: 10px 0px;
+
+}
+.movie-info .awards i{
+color: var(--primary-color);
+margin-bottom: 10px;
+
+}
+.movie-info .embed-link{
+margin-top: 25px;
+}
+
+.embed-link a {
+color: #ffffff;            
+text-decoration: none;      
+font-weight: bold;         
+padding: 10px 20px;       
+background-color: var(--md-dark-color); 
+border-radius: 5px;       
+transition: background-color 0.2s; 
+}
+
+.embed-link a:hover {
+background-color: var(--dark-color);  /* Darker color on hover */
+color: #fff;     
+border: 1px solid white;           /* White text on hover */
+}
+
+.footer{
+  background-color: var(--dark-color);
+  color: white;
+  padding: 5vh 0;
+  text-align: center;
+}
