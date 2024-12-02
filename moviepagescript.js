@@ -4,7 +4,7 @@ const resultGrid = document.getElementById('result-grid');
 
 // Load movies from API based on the search term
 async function loadMovies(searchTerm) {
-    const URL = `https://omdbapi.com/?s=${searchTerm}&page=1&apikey=620186d3`;
+    const URL = `https://www.omdbapi.com/?s=${searchTerm}&page=1&apikey=620186d3`; // Updated to https
     const res = await fetch(URL);
     const data = await res.json();
     if (data.Response === "True") displayMovieList(data.Search);
@@ -63,7 +63,7 @@ async function fetchAndDisplayMovieDetails() {
     const movieID = urlParams.get('movieID');
 
     if (movieID) {
-        const result = await fetch(`https://www.omdbapi.com/?i=${movieID}&apikey=620186d3`);
+        const result = await fetch(`https://www.omdbapi.com/?i=${movieID}&apikey=620186d3`); // Updated to https
         const movieDetails = await result.json();
         displayMovieDetails(movieDetails);
     }
@@ -76,9 +76,9 @@ function displayMovieDetails(details) {
     if (details.Type === 'series') {
         const seasonNumber = 1;
         const episodeNumber = 1;
-        embedLink = `https://embed.su/embed/tv/${details.imdbID}/${seasonNumber}/${episodeNumber}`;
+        embedLink = `https://embed.su/embed/tv/${details.imdbID}/${seasonNumber}/${episodeNumber}`; // Ensure https
     } else if (details.Type === 'movie') {
-        embedLink = `https://embed.su/embed/movie/${details.imdbID}`;
+        embedLink = `https://embed.su/embed/movie/${details.imdbID}`; // Ensure https
     }
 
     resultGrid.innerHTML = `
