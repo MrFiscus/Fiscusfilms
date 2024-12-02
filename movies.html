@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiscusFilms</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+        </style>
+    <style>
+         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+    </style>
+          
+          <link rel="icon" type="image/png" href="./image-removebg-preview (1).png"/>
+</head>
+<body>
+    
+    <!-- <embed src="https://embed.su/embed/movie/{tmdb_id}" type="">
+    <embed src="https://embed.su/embed/tv/{tmdb_id}/{season_number}/{episode_number}" type=""> -->
+        <div class="body-movie-poster">
+    <div class="nav-bar" id="navbar">
+        <div class="logo">
+            <img class="logo" src="./image-removebg-preview (1).png" alt="" srcset="">
+            <a href="index.html"> <h1 class="title">FiscusFilms</h1> </a></div>
+        
+       <ul class="nav-bar-sub">
+        <button class="nav-bar-buttons">
+          <a class="nav-bar-subbuttons" href="./index.html" ><span class="nav-bar-text">Home</span></a>
+        </button>
+        <button class="nav-bar-buttons">
+            <a class="nav-bar-subbuttons" href="index.html#popularmovies" ><span class="nav-bar-text">Movies</span></a>
+          </button>
+          <button class="nav-bar-buttons">
+            <a class="nav-bar-subbuttons" href="index.html#popularseries" ><span class="nav-bar-text">Series</span></a>
+          </button>
+          <button class="nav-bar-buttons">
+            <a class="nav-bar-subbuttons" href="index.html#popularfiscus" ><span class="nav-bar-text">List</span></a>
+          </button>
+
+               
+                 
+<div class="container">
+        <input checked="" class="checkbox" type="checkbox"> 
+        <div class="mainbox">
+            <div class="iconContainer">
+                <svg viewBox="0 0 512 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="search_icon"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"></path></svg>
+            </div>
+         <input class = "form-control search_input" placeholder="Enter Movie Title.." id = "movie-search-box" onkeyup="findMovies()" onclick = "findMovies()" type="text">
+        </div>
+         <div class = "search-list" id = "search-list">
+           <!-- list here -->
+                    <!-- <div class = "search-list-item">
+                        <div class = "search-item-thumbnail">
+                            <img src = "medium-cover.jpg">
+                        </div>
+                        <div class = "search-item-info">
+                            <h3>Guardians of the Galaxy Vol. 2</h3>
+                            <p>2017</p>
+                        </div>
+                    </div> -->
+    </div> 
+    </div>
+        </ul>
+    </div>
+
+
+    <div class="movie-main">
+       
+        <div id="movie-details-container"></div> 
+
+        <script>
+            const movieDetailsContainer = document.getElementById('movie-details-container');
+    
+            async function displayMovieDetails() {
+                const movieID = localStorage.getItem('movieID');
+                if (!movieID) {
+                    movieDetailsContainer.innerHTML = '<p>No movie selected.</p>';
+                    return;
+                }
+    
+                const res = await fetch(`http://www.omdbapi.com/?i=${movieID}&apikey=620186d3`);
+                const details = await res.json();
+    
+                let embedLink = '';
+                if (details.Type === 'series') {
+                    const seasonNumber = 1;
+                    const episodeNumber = 1;
+                    embedLink = `https://embed.su/embed/tv/${details.imdbID}/${seasonNumber}/${episodeNumber}`;
+                } else if (details.Type === 'movie') {
+                    embedLink = `https://embed.su/embed/movie/${details.imdbID}`;
+                }
+    
+                movieDetailsContainer.innerHTML = `
+                    <div class="movie-poster">
+                        <img src="${(details.Poster != "N/A") ? details.Poster : "image_not_found.png"}" alt="movie poster">
+                    </div>
+                    <div class="movie-info">
+                        <h3 class="movie-title">${details.Title}</h3>
+                        <ul class="movie-misc-info">
+                            <li class="year">Year: ${details.Year}</li>
+                            <li class="rated">Ratings: ${details.Rated}</li>
+                            <li class="released">Released: ${details.Released}</li>
+                        </ul>
+                        <p class="genre"><b>Genre:</b> ${details.Genre}</p>
+                        <p class="writer"><b>Writer:</b> ${details.Writer}</p>
+                        <p class="actors"><b>Actors:</b> ${details.Actors}</p>
+                        <p class="plot"><b>Plot:</b> ${details.Plot}</p>
+                        <p class="language"><b>Language:</b> ${details.Language}</p>
+                        <p class="awards"><b><i class="fas fa-award"></i></b> ${details.Awards}</p>
+                        <p class="embed-link"><a href="${embedLink}" target="_blank">Play Now</a></p>
+                    </div>
+                `;
+            }
+    
+            document.addEventListener('DOMContentLoaded', displayMovieDetails);
+        </script>
+    </div>
+    
+
+    <div class="footer">
+        <div class="footer-main">
+            <div class="footer-logo" >
+            <img class="logo" src="./image-removebg-preview (1).png" alt="" srcset="">
+            <h1 class="title">FiscusFilms</h1>
+        </div>
+        <div class="footer-links">
+            <h1>Quick Links</h1>
+            <a href="index.html">Home</a>
+            <a href="index.html#popularmovies">Movies</a>
+            <a href="index.html#popularseries">TV Series</a>
+            <a href="index.html#popularfiscus">List</a>
+        </div>
+        
+        <div class="footer-links">
+            <h1>Contact</h1>
+            <a href="#"> <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/facebook-app-round-white-icon.png" alt="" srcset=""><span>Facebook</span></a>
+            <a href="#"> <img src="https://img.icons8.com/m_rounded/200/FFFFFF/instagram-new.png" alt="" srcset=""><span>Instagram</span></a>
+            <a href="#"> <img src="./images/twitter-16.png" alt="" srcset=""><span>Twitter</span></a>
+            <a href="#"> <img src="./images/reddit-16.png" alt="" srcset=""><span>Reddit</span></a>
+        </div>
+       <div class="sub-footer"> <p>Powered By: <a href="https://www.omdbapi.com/">OMDb API</a></p>
+        <p>Developed By: <a href="https://github.com/MrFiscus">Fiscus Lyrate</a></p></div>
+        </div>
+        
+        <div class="footer-copyright">
+            <p > Fiscus Films &copy; 2023  |  All rights reserved.</p>
+           
+        </div>
+        <div class="footer-caption">
+            <p>Movie Website Concept developed by Fiscus.</p>
+        </div>
+    
+    
+
+
+<script src="moviepagescript.js"></script>
+</div>
+</body>
+</html>
