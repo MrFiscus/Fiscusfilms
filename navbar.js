@@ -43,11 +43,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Scroll detection for navbar background
-  window.addEventListener("scroll", () => {
+  function updateNavBackground() {
     if (window.scrollY > 50) {
       navBar.classList.add("nav-colored");
     } else {
       navBar.classList.remove("nav-colored");
     }
-  });
+  }
+
+  // Keep nav transparent on initial load.
+  navBar.classList.remove("nav-colored");
+  window.addEventListener("scroll", updateNavBackground);
 });

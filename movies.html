@@ -19,6 +19,7 @@
     <!-- <embed src="https://embed.su/embed/movie/{tmdb_id}" type="">
     <embed src="https://embed.su/embed/tv/{tmdb_id}/{season_number}/{episode_number}" type=""> -->
         <div class="body-movie-poster">
+    <div class="movie-hero-surface" id="movie-hero-surface">
     <div class="nav-bar" id="navbar">
         <div class="logo">
             <img class="logo" src="./image-removebg-preview (1).png" alt="" srcset="">
@@ -82,9 +83,11 @@
     </div>
 
 
+    <div id="movie-details-container"></div>
+    </div>
+
+
     <div class="movie-main">
-       
-        <div id="movie-details-container"></div>
         <section class="movie-cast-section" id="movie-cast-section">
             <h2 class="movie-cast-title">Cast</h2>
             <div class="movie-cast-slider-container">
@@ -97,13 +100,14 @@
             <p class="movie-cast-empty hidden" id="movie-cast-empty">Cast details are not available for this title.</p>
         </section>
         <section class="movie-recommend-section" id="movie-recommend-section">
-            <h2 class="movie-recommend-title">Recommendation & Similar</h2>
+            <h2 class="movie-recommend-title">Similar & Recommended Movies</h2>
             <ul class="movie-list movie-recommend-grid" id="recommended-movies-list"></ul>
             <p class="movie-recommend-empty hidden" id="recommended-movies-empty">No recommendations found for this title.</p>
         </section>
 
         <script>
             const movieDetailsContainer = document.getElementById('movie-details-container');
+            const movieHeroSurface = document.getElementById('movie-hero-surface');
             const movieCastList = document.getElementById('movie-cast-list');
             const movieCastEmpty = document.getElementById('movie-cast-empty');
             const castPrevButton = document.getElementById('cast-prev-slide');
@@ -112,6 +116,8 @@
             const recommendedMoviesEmpty = document.getElementById('recommended-movies-empty');
             const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
             const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+            const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
+            const TMDB_IMAGE_ORIGINAL_BASE = 'https://image.tmdb.org/t/p/original';
 
             function getTmdbApiKey() {
                 if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
@@ -140,7 +146,7 @@
                     return;
                 }
 
-                const res = await fetch(`${TMDB_BASE_URL}/${tmdbMediaType}/${tmdbMovieID}?api_key=${tmdbApiKey}&append_to_response=credits,external_ids,watch/providers,videos,recommendations`);
+                const res = await fetch(`${TMDB_BASE_URL}/${tmdbMediaType}/${tmdbMovieID}?api_key=${tmdbApiKey}&append_to_response=credits,external_ids,watch/providers,videos,recommendations,images&include_image_language=en,null`);
                 const details = await res.json();
 
                 if (details.success === false) {
@@ -149,10 +155,20 @@
                 }
 
                 const displayTitle = details.title || details.name || 'Untitled';
+                const logos = details.images && Array.isArray(details.images.logos) ? details.images.logos : [];
+                const preferredLogo = logos.find((logo) => logo.iso_639_1 === 'en')
+                    || logos.find((logo) => logo.iso_639_1 === null)
+                    || logos[0];
+                const titleLogoUrl = preferredLogo && preferredLogo.file_path
+                    ? `${TMDB_IMAGE_ORIGINAL_BASE}${preferredLogo.file_path}`
+                    : '';
+                const titleMarkup = titleLogoUrl
+                    ? `<img class="movie-title-logo" src="${titleLogoUrl}" alt="${displayTitle} title logo">`
+                    : `<h3 class="movie-title">${displayTitle}</h3>`;
                 const primaryDate = details.release_date || details.first_air_date;
-                const year = primaryDate ? primaryDate.split('-')[0] : 'N/A';
+                const releaseYear = primaryDate ? primaryDate.split('-')[0] : 'N/A';
+                const releasedDate = primaryDate ? primaryDate.replace(/-/g, '/') : 'N/A';
                 const rating = details.vote_average ? `${details.vote_average.toFixed(1)}/10` : 'N/A';
-                const released = primaryDate || 'N/A';
                 const genres = details.genres && details.genres.length
                     ? details.genres.map((g) => g.name).join(', ')
                     : 'N/A';
@@ -163,15 +179,27 @@
                         .map((c) => c.name)
                         .join(', ')
                     : '';
-                const actors = details.credits && details.credits.cast
-                    ? details.credits.cast.slice(0, 5).map((c) => c.name).join(', ')
-                    : '';
                 const languages = details.spoken_languages && details.spoken_languages.length
                     ? details.spoken_languages.map((l) => l.english_name || l.name).join(', ')
                     : 'N/A';
                 const posterUrl = details.poster_path
                     ? `${TMDB_IMAGE_BASE}${details.poster_path}`
                     : 'https://via.placeholder.com/300x450?text=No+Poster';
+                const backgroundImage = details.backdrop_path
+                    ? `${TMDB_BACKDROP_BASE}${details.backdrop_path}`
+                    : (details.poster_path ? `${TMDB_IMAGE_BASE}${details.poster_path}` : '');
+                const movieBackgroundLayer = backgroundImage
+                    ? `linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url("${backgroundImage}")`
+                    : '';
+
+                if (movieHeroSurface && movieBackgroundLayer) {
+                    movieHeroSurface.style.backgroundImage = movieBackgroundLayer;
+                    movieHeroSurface.style.backgroundRepeat = 'no-repeat';
+                    movieHeroSurface.style.backgroundSize = 'cover';
+                    movieHeroSurface.style.backgroundPosition = 'center top';
+                } else if (movieHeroSurface) {
+                    movieHeroSurface.style.backgroundImage = 'none';
+                }
                 const imdbId = details.external_ids ? details.external_ids.imdb_id : null;
                 const embedLink = imdbId
                     ? `https://www.imdb.com/title/${imdbId}`
@@ -261,21 +289,22 @@
                         <img src="${posterUrl}" alt="movie poster">
                     </div>
                     <div class="movie-info">
-                        <h3 class="movie-title">${displayTitle}</h3>
+                        ${titleMarkup}
                         <ul class="movie-misc-info">
-                            <li class="year">Year: ${year}</li>
-                            <li class="rated">Ratings: ${rating}</li>
-                            <li class="released">Released: ${released}</li>
+                            <li class="year released-date-item">
+                                <img class="released-date-icon" src="https://img.icons8.com/ios/50/FFFFFF/calendar--v1.png" alt="Release date">
+                                <span>${releasedDate}</span>
+                            </li>
+                            <li class="rated"><span class="detail-label button-match-label">Rating</span> ${rating}</li>
                         </ul>
-                        <p class="genre"><b>Genre:</b> ${genres}</p>
-                        <p class="writer"><b>Writer:</b> ${writerNames || 'N/A'}</p>
-                        <p class="actors"><b>Actors:</b> ${actors || 'N/A'}</p>
-                        <p class="plot"><b>Plot:</b> ${details.overview || 'N/A'}</p>
-                        <p class="language"><b>Language:</b> ${languages}</p>
+                        <p class="genre"><span class="detail-label button-match-label">Genre</span> ${genres}</p>
+                        <p class="writer"><span class="detail-label">Writer</span> ${writerNames || 'N/A'}</p>
+                        <p class="plot"><span class="detail-label">Plot</span> ${details.overview || 'N/A'}</p>
+                        <p class="language"><span class="detail-label">Language</span> ${languages}</p>
                         <div class="movie-action-row">
                             <a class="movie-action-btn" href="${playNowLink}" target="_blank" rel="noopener noreferrer">Play Now</a>
                             <button id="add-watchlist-btn" class="watchlist-action-btn">Add to Watchlist</button>
-                            <button id="like-movie-btn" class="watchlist-action-btn" aria-pressed="false">\u2661 Like</button>
+                            <button id="like-movie-btn" class="watchlist-action-btn like-heart-btn" aria-pressed="false" aria-label="Toggle favorite">\u2661</button>
                         </div>
                         ${availableOnMarkup}
                         <p id="watchlist-action-message" class="watchlist-inline-message"></p>
@@ -296,7 +325,7 @@
                         const result = await window.FiscusAuth.addMovieToWatchlist({
                             imdb_id: watchlistKey,
                             title: displayTitle,
-                            year,
+                            year: releaseYear,
                             poster: posterUrl,
                             type: watchlistType
                         });
@@ -307,7 +336,7 @@
 
                 if (likeButton) {
                     if (window.FiscusAuth && window.FiscusAuth.isFavoriteMovie && window.FiscusAuth.isFavoriteMovie(watchlistKey)) {
-                        likeButton.textContent = '\u2665 Liked';
+                        likeButton.textContent = '\u2665';
                         likeButton.setAttribute('aria-pressed', 'true');
                     }
 
@@ -325,16 +354,16 @@
                         const result = window.FiscusAuth.toggleFavoriteMovie({
                             imdb_id: watchlistKey,
                             title: displayTitle,
-                            year,
+                            year: releaseYear,
                             poster: posterUrl,
                             tmdb_id: details.id
                         });
 
                         if (result.ok && result.liked) {
-                            likeButton.textContent = '\u2665 Liked';
+                            likeButton.textContent = '\u2665';
                             likeButton.setAttribute('aria-pressed', 'true');
                         } else if (result.ok) {
-                            likeButton.textContent = '\u2661 Like';
+                            likeButton.textContent = '\u2661';
                             likeButton.setAttribute('aria-pressed', 'false');
                         }
 

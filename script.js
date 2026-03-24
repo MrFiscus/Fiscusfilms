@@ -45,8 +45,10 @@ function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId) {
         }
 
         const firstItemStyle = window.getComputedStyle(firstItem);
+        const listStyle = window.getComputedStyle(movieList);
         const marginRight = parseFloat(firstItemStyle.marginRight || "0");
-        const stepWidth = firstItem.getBoundingClientRect().width + marginRight;
+        const listGap = parseFloat(listStyle.columnGap || listStyle.gap || "0");
+        const stepWidth = firstItem.getBoundingClientRect().width + Math.max(marginRight, listGap);
         if (!stepWidth) {
             return null;
         }

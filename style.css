@@ -684,10 +684,11 @@ padding-top: 2vh;
 }
 
 .movie-recomen-moviesbox {
-  width: 94vw;
+  width: 100%;
   height: calc(var(--list-card-height) + 2vh);
   margin: 0 auto;
   padding: 0 var(--slider-side-space);
+  box-sizing: border-box;
   overflow: hidden;
 }
 
@@ -696,6 +697,7 @@ padding-top: 2vh;
   display: flex;
   transition: transform 0.5s ease;
   list-style: none;
+  gap: 8px;
   margin: 0;
   padding: 0;
 }
@@ -703,8 +705,8 @@ padding-top: 2vh;
 
 .movie-poster-box {
   flex: 0 0 var(--list-card-width);
-  width: var(--list-card-width); 
-  margin-right: 8px; 
+  width: var(--list-card-width);
+  margin-right: 0;
 
 }
 
@@ -786,10 +788,11 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
   width: 100%;
 }
 .series-recomen-seriesbox {
-  width: 94vw;
+  width: 100%;
   height: calc(var(--list-card-height) + 2vh);
   margin: 0 auto;
   padding: 0 var(--slider-side-space);
+  box-sizing: border-box;
   overflow: hidden;
   
 }
@@ -798,6 +801,7 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
   display: flex;
   transition: transform 0.5s ease;
   list-style: none;
+  gap: 8px;
   margin: 0;
   padding: 0;
 }
@@ -867,10 +871,11 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
   width: 100%;
 }
 .fiscus-recomen-seriesbox {
-  width: 94vw;
+  width: 100%;
   height: calc(var(--list-card-height) + 2vh);
   margin: 0 auto;
   padding: 0 var(--slider-side-space);
+  box-sizing: border-box;
   overflow: hidden;
   
 }
@@ -879,6 +884,7 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
   display: flex;
   transition: transform 0.5s ease;
   list-style: none;
+  gap: 8px;
   margin: 0;
   padding: 0;
 }
@@ -1071,23 +1077,29 @@ width: 100%;
   height: auto;
   display: flex;
   flex-direction: column;
-  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://t4.ftcdn.net/jpg/08/58/69/13/360_F_858691375_iASliDBLyB3vOVNH2iIHaabhIkNxKGZD.jpg);
+  background-color: var(--primary-color);
+}
 
+.movie-hero-surface {
+  width: 100%;
+  min-height: 100dvh;
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: center;
+  background-position: center top;
 }
 
 #movie-details-container{
 display: flex;
 flex-direction: row;
 color: white ;
+min-height: calc(100dvh - 86px);
 height: auto;
-justify-content: space-around;
-align-items: flex-start;
-gap: 24px;
+justify-content: center;
+align-items: center;
+gap: 38px;
 padding: 10vh 10vw;
 width: 100%;
+box-sizing: border-box;
 }
 
 .movie-main{
@@ -1102,16 +1114,19 @@ display: flex;
 .movie-cast-section {
   width: min(100%, 1600px);
   margin: 0 auto;
-  padding: 6px 14px 28px;
+  padding: 16px 14px 28px;
   box-sizing: border-box;
+  background-color: var(--primary-color);
+  padding-top: 5vh;
 }
 
 .movie-cast-title {
   color: rgb(201, 198, 198);
   font-family: "Oswald", sans-serif;
-  font-weight: 300;
-  font-size: 25px;
+  font-weight: 700;
+  font-size: 1.25rem;
   line-height: 1.2;
+  letter-spacing: 0.01em;
   margin: 0 0 14px;
   text-align: center;
 }
@@ -1239,14 +1254,17 @@ display: flex;
   width: min(100%, 1600px);
   margin: 0 auto;
   padding: 6px 14px 28px;
+  background-color: var(--primary-color);
+  padding-top: 5vh;
 }
 
 .movie-recommend-title {
   color: rgb(201, 198, 198);
   font-family: "Oswald", sans-serif;
-  font-weight: 300;
-  font-size: 25px;
+  font-weight: 700;
+  font-size: 1.25rem;
   line-height: 1.2;
+  letter-spacing: 0.01em;
   text-align: center;
   margin: 0 0 14px;
 }
@@ -1274,7 +1292,7 @@ display: flex;
   text-align: center;
 }
 .movie-poster{
-width: min(28vw, 340px);
+width: min(30vw, 390px);
 min-width: 240px;
 height: auto;
 flex-direction: column;
@@ -1295,16 +1313,56 @@ border: 4px solid #fff;
 .movie-info{
 text-align: center;
 color: #fff;
-padding-top: 3rem;
+padding-top: 0;
 text-align: left;
-width: min(50vw, 760px);
+width: min(56vw, 940px);
 max-width: 100%;
+font-family: "Oswald", sans-serif;
+font-weight: 300;
+line-height: 1.45;
 }
 
 /* movie info stylings */
 .movie-title{
-font-size: 2rem;
+font-size: clamp(2.2rem, 3vw, 3.2rem);
 color: var(--white-color);
+font-family: "Oswald", sans-serif;
+font-weight: 400;
+letter-spacing: 0.01em;
+}
+
+.movie-title-logo {
+  display: block;
+  width: min(100%, 520px);
+  max-height: 150px;
+  object-fit: contain;
+  object-position: left center;
+  margin: 0 0 8px;
+}
+
+.movie-info p,
+.movie-info li {
+  font-size: 1rem;
+  font-weight: 300;
+  color: #e5e8ed;
+}
+
+.detail-label {
+  color: #c6d3e1;
+  font-weight: 400;
+  font-size: 1rem;
+  margin-right: 6px;
+}
+
+.button-match-label {
+  font-family: "Oswald", sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+.detail-label::after {
+  content: ":";
 }
 .movie-misc-info{
 list-style-type: none;
@@ -1316,20 +1374,34 @@ gap: 6px;
 padding: 12px 0px;
 }
 .movie-info .year{
-font-weight: 500;
+font-weight: 400;
 padding: 5px;
 }
+
+.released-date-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.released-date-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
 .movie-info .rated{
 background-color: var(--md-dark-color);
 padding: 5px;
 border-radius: 3px;
-font-weight: 600;
+font-weight: 400;
 margin-left: 0;
 }
 .movie-info .released{
 font-size: 0.9rem;
 padding: 5px;
 margin-left: 0;
+font-weight: 400;
 }
 .movie-info .writer{
 padding-bottom: 10px;
@@ -1341,6 +1413,7 @@ display: inline-block;
 padding: 0.5rem;
 border-radius: 3px;
 margin-bottom: 10px;
+font-weight: 300;
 
 }
 .movie-info .plot{
@@ -1350,7 +1423,7 @@ padding: 10px 0px;
 overflow-wrap: break-word;
 }
 .movie-info .language{
-color: var(--white-color);
+color: #d9e3ed;
 font-style: italic;
 }
 .movie-info .awards{
@@ -1451,17 +1524,49 @@ color: #d5dde6;
 .embed-link a,
 .movie-action-btn,
 .watchlist-action-btn {
-color: #ffffff;            
-text-decoration: none;      
-font-weight: bold;         
-padding: 10px 20px;       
-background-color: var(--md-dark-color); 
-border-radius: 5px;       
-transition: background-color 0.2s; 
+color: #ffffff;
+text-decoration: none;
+font-weight: 700;
+font-family: "Oswald", sans-serif;
+padding: 13px 24px;
+background-color: var(--md-dark-color);
+border-radius: 20px;
+transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
 border: 1px solid transparent;
-font-size: 14px;
+font-size: 1rem;
 line-height: 1.2;
 cursor: pointer;
+}
+
+.watchlist-action-btn {
+  background-color: transparent;
+  border: 2px solid var(--light-dark-color);
+  color: rgb(218, 210, 210);
+}
+
+.watchlist-action-btn:not(.like-heart-btn):hover {
+  background-color: var(--light-dark-color);
+  color: rgb(212, 208, 208);
+  border-color: var(--light-dark-color);
+}
+
+.movie-action-btn:hover {
+  background-color: var(--dark-color);
+  border-color: transparent;
+}
+
+.like-heart-btn {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  line-height: 1;
+  border-width: 1px;
 }
 
 .embed-link a:hover,
@@ -1470,6 +1575,10 @@ cursor: pointer;
 background-color: var(--dark-color);  
 color: #fff;     
 border: 1px solid white;           
+}
+
+.like-heart-btn:hover {
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .footer{
@@ -1786,11 +1895,11 @@ font-weight: 700;
   border-color: rgba(224, 73, 73, 0.55);
 }
 
-.watchlist-action-btn {
+.watchlist-section .watchlist-action-btn {
   border-color: transparent;
 }
 
-.watchlist-action-btn[aria-pressed="true"] {
+.watchlist-section .watchlist-action-btn[aria-pressed="true"] {
   background-color: #e04949;
   border-color: rgba(255, 255, 255, 0.2);
 }
@@ -2464,6 +2573,7 @@ font-weight: 700;
 
   #movie-details-container {
     flex-direction: column;
+    min-height: calc(100dvh - 76px);
     height: auto;
     padding: 4vh 6vw;
     gap: 16px;
