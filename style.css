@@ -1067,7 +1067,10 @@ display: none;
 
 .body-movie-poster{
 width: 100%;
-  height: 100vh;
+  min-height: 100dvh;
+  height: auto;
+  display: flex;
+  flex-direction: column;
   background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(https://t4.ftcdn.net/jpg/08/58/69/13/360_F_858691375_iASliDBLyB3vOVNH2iIHaabhIkNxKGZD.jpg);
 
   background-repeat: no-repeat;
@@ -1079,19 +1082,21 @@ width: 100%;
 display: flex;
 flex-direction: row;
 color: white ;
-height: 80vh;
+height: auto;
 justify-content: space-around;
 align-items: flex-start;
 gap: 24px;
 padding: 10vh 10vw;
+width: 100%;
 }
 
 .movie-main{
 display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100vw;
-  height: 86vh;
+  width: 100%;
+  height: auto;
+  min-height: 0;
 }
 .movie-poster{
 width: min(28vw, 340px);
@@ -1118,6 +1123,7 @@ color: #fff;
 padding-top: 3rem;
 text-align: left;
 width: min(50vw, 760px);
+max-width: 100%;
 }
 
 /* movie info stylings */
@@ -1130,6 +1136,8 @@ list-style-type: none;
 display: flex;
 flex-direction: row;
 justify-content: flex-start;
+flex-wrap: wrap;
+gap: 6px;
 padding: 12px 0px;
 }
 .movie-info .year{
@@ -1141,12 +1149,12 @@ background-color: var(--md-dark-color);
 padding: 5px;
 border-radius: 3px;
 font-weight: 600;
-margin-left: 5px;
+margin-left: 0;
 }
 .movie-info .released{
 font-size: 0.9rem;
 padding: 5px;
-margin-left: 5px;
+margin-left: 0;
 }
 .movie-info .writer{
 padding-bottom: 10px;
@@ -1162,8 +1170,9 @@ margin-bottom: 10px;
 }
 .movie-info .plot{
 
-width: 80%;
+width: 100%;
 padding: 10px 0px;
+overflow-wrap: break-word;
 }
 .movie-info .language{
 color: var(--white-color);
@@ -2213,6 +2222,12 @@ font-weight: 700;
     gap: 16px;
   }
 
+  .movie-main {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
   .movie-poster {
     width: min(75vw, 320px);
     min-width: 0;
@@ -2221,6 +2236,16 @@ font-weight: 700;
   .movie-info {
     width: 100%;
     padding-top: 0;
+  }
+
+  .movie-action-row {
+    gap: 8px;
+  }
+
+  .movie-action-btn,
+  .watchlist-action-btn {
+    width: auto;
+    padding: 10px 14px;
   }
 }
 
