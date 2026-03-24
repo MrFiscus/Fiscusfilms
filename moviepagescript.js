@@ -1,10 +1,10 @@
 
+(function () {
 const movieSearchBox = document.getElementById('movie-search-box');
 const searchList = document.getElementById('search-list');
-const resultGrid = document.getElementById('result-grid');
 
-const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
+const MOVIE_PAGE_TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const MOVIE_PAGE_TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 function getTmdbApiKey() {
     if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
@@ -18,6 +18,10 @@ function getTmdbApiKey() {
     return window.TMDB_CONFIG.apiKey;
 }
 
+if (!movieSearchBox || !searchList) {
+    return;
+}
+
 // load movies from API
 async function loadMovies(searchTerm){
     const tmdbApiKey = getTmdbApiKey();
@@ -25,7 +29,7 @@ async function loadMovies(searchTerm){
         return;
     }
 
-    const URL = `${TMDB_BASE_URL}/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(searchTerm)}&include_adult=false&page=1`;
+    const URL = `${MOVIE_PAGE_TMDB_BASE_URL}/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(searchTerm)}&include_adult=false&page=1`;
     const res = await fetch(URL);
     const data = await res.json();
     const mediaResults = (data.results || []).filter((item) => item.media_type === 'movie' || item.media_type === 'tv');
@@ -56,7 +60,7 @@ function displayMovieList(movies){
         movieListItem.dataset.mediaType = movies[idx].media_type || 'movie';
         movieListItem.classList.add('search-list-item');
         const moviePoster = movies[idx].poster_path
-            ? `${TMDB_IMAGE_BASE}${movies[idx].poster_path}`
+            ? `${MOVIE_PAGE_TMDB_IMAGE_BASE}${movies[idx].poster_path}`
             : "https://via.placeholder.com/300x450?text=No+Poster";
         const mediaTitle = movies[idx].title || movies[idx].name || 'Untitled';
         const mediaDate = movies[idx].release_date || movies[idx].first_air_date;
@@ -117,10 +121,15 @@ function loadMovieDetails() {
 }
 
 window.addEventListener('click', (event) => {
-    if(event.target.className != "form-control"){
+    if (!event.target.closest('.container')) {
         searchList.classList.add('hide-search-list');
     }
 });
+
+// movies.html uses inline handlers (onkeyup/onclick), so keep this available globally.
+window.findMovies = findMovies;
+
+})();
 
 
 

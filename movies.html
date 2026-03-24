@@ -84,10 +84,32 @@
 
     <div class="movie-main">
        
-        <div id="movie-details-container"></div> 
+        <div id="movie-details-container"></div>
+        <section class="movie-cast-section" id="movie-cast-section">
+            <h2 class="movie-cast-title">Cast</h2>
+            <div class="movie-cast-slider-container">
+                <button id="cast-prev-slide" class="movie-page-slider-button-left" aria-label="Previous cast">&#10094;</button>
+                <div class="movie-cast-track-wrap">
+                    <ul class="movie-cast-list" id="movie-cast-list"></ul>
+                </div>
+                <button id="cast-next-slide" class="movie-page-slider-button-right" aria-label="Next cast">&#10095;</button>
+            </div>
+            <p class="movie-cast-empty hidden" id="movie-cast-empty">Cast details are not available for this title.</p>
+        </section>
+        <section class="movie-recommend-section" id="movie-recommend-section">
+            <h2 class="movie-recommend-title">Recommendation & Similar</h2>
+            <ul class="movie-list movie-recommend-grid" id="recommended-movies-list"></ul>
+            <p class="movie-recommend-empty hidden" id="recommended-movies-empty">No recommendations found for this title.</p>
+        </section>
 
         <script>
             const movieDetailsContainer = document.getElementById('movie-details-container');
+            const movieCastList = document.getElementById('movie-cast-list');
+            const movieCastEmpty = document.getElementById('movie-cast-empty');
+            const castPrevButton = document.getElementById('cast-prev-slide');
+            const castNextButton = document.getElementById('cast-next-slide');
+            const recommendedMoviesList = document.getElementById('recommended-movies-list');
+            const recommendedMoviesEmpty = document.getElementById('recommended-movies-empty');
             const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
             const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
@@ -118,7 +140,7 @@
                     return;
                 }
 
-                const res = await fetch(`${TMDB_BASE_URL}/${tmdbMediaType}/${tmdbMovieID}?api_key=${tmdbApiKey}&append_to_response=credits,external_ids`);
+                const res = await fetch(`${TMDB_BASE_URL}/${tmdbMediaType}/${tmdbMovieID}?api_key=${tmdbApiKey}&append_to_response=credits,external_ids,watch/providers,videos,recommendations`);
                 const details = await res.json();
 
                 if (details.success === false) {
@@ -154,8 +176,85 @@
                 const embedLink = imdbId
                     ? `https://www.imdb.com/title/${imdbId}`
                     : `https://www.themoviedb.org/${tmdbMediaType}/${details.id}`;
+                const trailerResults = (details.videos && details.videos.results) || [];
+                const bestTrailer = trailerResults.find((video) => video.site === 'YouTube' && video.type === 'Trailer' && video.official)
+                    || trailerResults.find((video) => video.site === 'YouTube' && video.type === 'Trailer')
+                    || trailerResults.find((video) => video.site === 'YouTube' && video.type === 'Teaser');
+                const playNowLink = bestTrailer
+                    ? `https://www.youtube.com/watch?v=${bestTrailer.key}&autoplay=1`
+                    : embedLink;
                 const watchlistKey = imdbId || `tmdb:${details.id}`;
                 const watchlistType = tmdbMediaType;
+                const providerResults = (details['watch/providers'] && details['watch/providers'].results) || {};
+                const localeCountry = ((navigator.language || 'en-US').split('-')[1] || '').toUpperCase();
+                const providerRegion = providerResults[localeCountry]
+                    ? localeCountry
+                    : (providerResults.US ? 'US' : Object.keys(providerResults)[0]);
+                const selectedProviders = providerRegion ? providerResults[providerRegion] : null;
+                const castMembers = details.credits && details.credits.cast
+                    ? details.credits.cast.slice(0, 24)
+                    : [];
+                const recommendations = (details.recommendations && details.recommendations.results)
+                    ? details.recommendations.results
+                    : [];
+
+                const providerBuckets = [
+                    { key: 'flatrate', label: 'Stream' },
+                    { key: 'rent', label: 'Rent' },
+                    { key: 'buy', label: 'Buy' }
+                ];
+
+                const providerMap = new Map();
+
+                providerBuckets.forEach(({ key, label }) => {
+                    const providers = (selectedProviders && selectedProviders[key]) || [];
+
+                    providers.forEach((provider) => {
+                        const providerKey = provider.provider_id || provider.provider_name;
+                        if (!providerKey) {
+                            return;
+                        }
+
+                        if (!providerMap.has(providerKey)) {
+                            providerMap.set(providerKey, {
+                                provider_name: provider.provider_name,
+                                logo_path: provider.logo_path,
+                                availabilityTags: [label]
+                            });
+                            return;
+                        }
+
+                        const existing = providerMap.get(providerKey);
+                        if (!existing.availabilityTags.includes(label)) {
+                            existing.availabilityTags.push(label);
+                        }
+                    });
+                });
+
+                const uniqueProviders = Array.from(providerMap.values()).slice(0, 18);
+
+                const providerLogosMarkup = uniqueProviders.map((provider) => {
+                    const logo = provider.logo_path
+                        ? `${TMDB_IMAGE_BASE}${provider.logo_path}`
+                        : 'https://via.placeholder.com/46x46?text=%3F';
+                    const providerTitle = `${provider.provider_name} (${provider.availabilityTags.join(', ')})`;
+                    return `<li class="provider-item" title="${providerTitle}"><img src="${logo}" alt="${provider.provider_name}"></li>`;
+                }).join('');
+
+                const availableOnMarkup = selectedProviders && uniqueProviders.length
+                    ? `
+                        <div class="available-on-section">
+                            <h4>Available On ${providerRegion ? `(${providerRegion})` : ''}</h4>
+                            <ul class="provider-list">${providerLogosMarkup}</ul>
+                           
+                        </div>
+                    `
+                    : `
+                        <div class="available-on-section">
+                            <h4>Available On</h4>
+                            <p class="provider-empty">No provider data available for this title right now.</p>
+                        </div>
+                    `;
     
                 movieDetailsContainer.innerHTML = `
                     <div class="movie-poster">
@@ -173,12 +272,12 @@
                         <p class="actors"><b>Actors:</b> ${actors || 'N/A'}</p>
                         <p class="plot"><b>Plot:</b> ${details.overview || 'N/A'}</p>
                         <p class="language"><b>Language:</b> ${languages}</p>
-                        <p class="awards"><b><i class="fas fa-award"></i></b> N/A on TMDb</p>
                         <div class="movie-action-row">
-                            <a class="movie-action-btn" href="${embedLink}" target="_blank">Play Now</a>
+                            <a class="movie-action-btn" href="${playNowLink}" target="_blank" rel="noopener noreferrer">Play Now</a>
                             <button id="add-watchlist-btn" class="watchlist-action-btn">Add to Watchlist</button>
                             <button id="like-movie-btn" class="watchlist-action-btn" aria-pressed="false">\u2661 Like</button>
                         </div>
+                        ${availableOnMarkup}
                         <p id="watchlist-action-message" class="watchlist-inline-message"></p>
                     </div>
                 `;
@@ -213,8 +312,13 @@
                     }
 
                     likeButton.addEventListener('click', () => {
-                        if (!window.FiscusAuth || !window.FiscusAuth.toggleFavoriteMovie) {
+                        if (!window.FiscusAuth || !window.FiscusAuth.toggleFavoriteMovie || !window.FiscusAuth.isAuthenticated) {
                             actionMessage.textContent = 'Profile features are not configured yet.';
+                            return;
+                        }
+
+                        if (!window.FiscusAuth.isAuthenticated()) {
+                            actionMessage.textContent = 'Please sign in first.';
                             return;
                         }
 
@@ -235,6 +339,98 @@
                         }
 
                         actionMessage.textContent = result.message;
+                    });
+                }
+
+                if (movieCastList && movieCastEmpty) {
+                    const castCards = castMembers.map((member) => {
+                        const castName = member.name || 'Unknown';
+                        const castCharacter = member.character || '';
+                        const castImage = member.profile_path
+                            ? `${TMDB_IMAGE_BASE}${member.profile_path}`
+                            : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+
+                        return `
+                            <li class="movie-cast-item" title="${castName}">
+                                <img class="movie-cast-avatar" src="${castImage}" alt="${castName}">
+                                <p class="movie-cast-name">${castName}</p>
+                                <p class="movie-cast-character">${castCharacter}</p>
+                            </li>
+                        `;
+                    }).join('');
+
+                    movieCastList.innerHTML = castCards;
+
+                    if (!castCards) {
+                        movieCastEmpty.classList.remove('hidden');
+                    } else {
+                        movieCastEmpty.classList.add('hidden');
+                    }
+
+                    if (castPrevButton && castNextButton && !movieCastList.dataset.sliderBound) {
+                        const slideCast = (direction) => {
+                            const card = movieCastList.querySelector('.movie-cast-item');
+                            const step = card ? card.getBoundingClientRect().width + 14 : 124;
+                            const visibleCards = Math.max(1, Math.floor(movieCastList.clientWidth / step));
+                            movieCastList.scrollBy({
+                                left: direction * step * visibleCards,
+                                behavior: 'smooth'
+                            });
+                        };
+
+                        castPrevButton.addEventListener('click', () => slideCast(-1));
+                        castNextButton.addEventListener('click', () => slideCast(1));
+                        movieCastList.dataset.sliderBound = 'true';
+                    }
+                }
+
+                if (recommendedMoviesList && recommendedMoviesEmpty) {
+                    const recommendationCards = recommendations
+                        .filter((item) => item.poster_path)
+                        .slice(0, 14)
+                        .map((item) => {
+                            const recTitle = item.title || item.name || 'Untitled';
+                            const recPoster = `${TMDB_IMAGE_BASE}${item.poster_path}`;
+                            return `
+                                <li class="movie-poster-box">
+                                    <a href="#" class="recommended-item-link" data-id="${item.id}" data-media-type="${tmdbMediaType}" aria-label="Open ${recTitle}">
+                                        <img class="recon-poster" src="${recPoster}" alt="${recTitle}">
+                                    </a>
+                                </li>
+                            `;
+                        })
+                        .join('');
+
+                    recommendedMoviesList.innerHTML = recommendationCards;
+
+                    if (!recommendationCards) {
+                        recommendedMoviesEmpty.classList.remove('hidden');
+                    } else {
+                        recommendedMoviesEmpty.classList.add('hidden');
+                    }
+
+                    recommendedMoviesList.querySelectorAll('.recommended-item-link').forEach((link) => {
+                        link.addEventListener('click', async (event) => {
+                            event.preventDefault();
+                            const selectedId = link.dataset.id;
+                            const selectedType = link.dataset.mediaType || 'movie';
+
+                            if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
+                                const cardImage = link.querySelector('.recon-poster');
+                                window.FiscusAuth.addSearchHistory({
+                                    tmdb_id: selectedId,
+                                    title: cardImage ? cardImage.alt : 'Unknown',
+                                    year: 'N/A'
+                                });
+                            }
+
+                            localStorage.setItem('tmdbMovieID', selectedId);
+                            localStorage.setItem('tmdbMediaType', selectedType);
+                            localStorage.removeItem('movieID');
+
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            await displayMovieDetails();
+                        });
                     });
                 }
             }

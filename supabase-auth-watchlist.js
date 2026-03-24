@@ -179,6 +179,10 @@
     writeCollection("history", deduped.slice(0, SEARCH_HISTORY_LIMIT));
   }
 
+  function isAuthenticated() {
+    return Boolean(currentUser);
+  }
+
   async function fetchWatchlist() {
     if (!supabaseClient || !currentUser) {
       return [];
@@ -413,7 +417,8 @@
     getSearchHistory,
     isFavoriteMovie,
     toggleFavoriteMovie,
-    addSearchHistory
+    addSearchHistory,
+    isAuthenticated
   };
 
   document.addEventListener("DOMContentLoaded", init);
