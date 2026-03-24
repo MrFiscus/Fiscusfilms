@@ -1,2 +1,2 @@
 # FiscusFilms
-A Video Streaming Website Concept by Fiscus.
+A video streaming website concept by Fiscus.

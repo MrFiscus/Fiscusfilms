@@ -24,8 +24,14 @@
         <div class="logo">
             <img class="logo" src="./image-removebg-preview (1).png" alt="" srcset="">
             <a href="index.html"> <h1 class="title">FiscusFilms</h1> </a></div>
+        <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
+            <svg class="nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M3 6.5h18v2H3zm0 4.75h18v2H3zm0 4.75h18v2H3z"></path>
+            </svg>
+            <span class="sr-only">Menu</span>
+        </button>
         
-       <ul class="nav-bar-sub">
+       <ul class="nav-bar-sub" id="nav-menu">
         <button class="nav-bar-buttons">
           <a class="nav-bar-subbuttons" href="index.html" ><span class="nav-bar-text">Home</span></a>
         </button>
@@ -38,9 +44,10 @@
           <button class="nav-bar-buttons">
             <a class="nav-bar-subbuttons" href="#popularfiscus" ><span class="nav-bar-text">List</span></a>
           </button>
+                    <button class="nav-bar-buttons">
+                        <a class="nav-bar-subbuttons" href="#watchlist" ><span class="nav-bar-text">Watchlist</span></a>
+                    </button>
 
-               
-                 
 <div class="container">
         <input checked="" class="checkbox" type="checkbox"> 
         <div class="mainbox">
@@ -62,6 +69,16 @@
                     </div> -->
     </div> 
     </div>
+
+                    <div class="auth-controls">
+                        <a id="profile-link" class="profile-link" href="profile.html" aria-label="Open profile">
+                            <img
+                                class="profile-avatar"
+                                src="./user.png"
+                                alt="Profile"
+                            >
+                        </a>
+                    </div>
         </ul>
     </div>
 
@@ -90,61 +107,94 @@
   </div>
   </div>
 
-  <div class="movie-recomen-body">
-    <h1 id="movie-recomen-title">Popular Movies</h1>
+    <div class="movie-recomen-body">
+        <h1 id="trending-recomen-title">Trending Movies</h1>
+    <div class="slider-container">
+        <button id="trending-prev-slide" class="slider-button">&#10094;</button> 
+        
+        <div class="movie-recomen-moviesbox">
+            <ul class="movie-list trending-list" id="trendingmovies"></ul>
+        </div>
+
+        <button id="trending-next-slide" class="slider-button">&#10095;</button> 
+    </div>
+</div>
+
+<div class="movie-recomen-body">
+    <h1 id="movie-recomen-title">Now Playing </h1>
     <div class="slider-container">
         <button id="recom-prev-slide" class="slider-button">&#10094;</button> 
         
         <div class="movie-recomen-moviesbox">
-            <ul class="movie-list" id="popularmovies">
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/5/1/5/6/8/51568-fight-club-0-1000-0-1500-crop.jpg?v=768b32dfa4" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/2/4/0/3/4/4/240344-la-la-land-0-1000-0-1500-crop.jpg?v=053670ff84" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/1/1/7/6/2/1/117621-interstellar-0-1000-0-1500-crop.jpg?v=7ad89e6666" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/5/1/4/4/4/51444-pulp-fiction-0-1000-0-1500-crop.jpg?v=dee19a8077" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/sm/upload/cl/dn/kr/f1/4C9LHDxMsoYI0S3iMPZdm3Oevwo-0-1000-0-1500-crop.jpg?v=d13ea36528" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/3/5/3/1/1/7/353117-get-out-0-1000-0-1500-crop.jpg?v=136acec030" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/sm/upload/78/y5/zg/ej/oefdD26aey8GPdx7Rm45PNncJdU-0-1000-0-1500-crop.jpg?v=2d0ce4be25" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/sm/upload/sv/95/s9/4j/inception-0-1000-0-1500-crop.jpg?v=30d7224316" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/8/6/1/1/4/86114-the-wolf-of-wall-street-0-1000-0-1500-crop.jpg?v=9fd1891260" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/5/1/7/8/2/51782-the-silence-of-the-lambs-0-1000-0-1500-crop.jpg?v=18d88bdff4" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/5/1/5/1/8/51518-the-matrix-0-1000-0-1500-crop.jpg?v=fc7c366afe" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/2/6/8/9/5/0/268950-baby-driver-0-1000-0-1500-crop.jpg?v=61304ddfc8" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/2/6/5/4/3/9/265439-blade-runner-2049-0-1000-0-1500-crop.jpg?v=86735e0bb8" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://a.ltrbxd.com/resized/film-poster/2/2/0/5/7/5/220575-deadpool-0-1000-0-1500-crop.jpg?v=2f726ea9b3" alt=""></a></li>
-
-
-            </ul>
+            <ul class="movie-list popular-list" id="nowplayingmovies"></ul>
         </div>
 
         <button id="recom-next-slide" class="slider-button">&#10095;</button> 
     </div>
 </div>
 
+<div class="movie-recomen-body">
+    <h1 id="upcoming-recomen-title">Upcoming Movies</h1>
+    <div class="slider-container">
+        <button id="upcoming-prev-slide" class="slider-button">&#10094;</button> 
+        
+        <div class="movie-recomen-moviesbox">
+            <ul class="movie-list upcoming-list" id="upcomingmovies"></ul>
+        </div>
+
+        <button id="upcoming-next-slide" class="slider-button">&#10095;</button> 
+    </div>
+</div>
+
 <div class="series-recomen-body">
-    <h1 id="series-recomen-title">Popular TV Series</h1>
+    <h1 id="series-recomen-title">Trending TV Shows</h1>
     <div class="slider-container">
         <button id="series-prev-slide" class="series-slider-button">&#10094;</button> 
         
         <div class="series-recomen-seriesbox">
-            <ul class="series-list" id="popularseries">
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/VACAhGxjctOsQXpWjoSf3k7w2oa78s6AGMwFigrcCDE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1Qk16VTVaR1l6/Tm1RdE1UZGhZeTAw/T0dSaUxUZzBObVF0/WWpWak56bGlaVGcx/WkdFNFhrRXlYa0Zx/Y0djQC5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/cTOoPEA3hAmr1huHZulQSm99k2dzkSdsn6eZocDdlW4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1Qk1UTmhNREpt/Tm1ZdE5EUTVPUzAw/T0RkbExXRTBaREF0/WlRneVlUSXdORFkz/T1RVM1hrRXlYa0Zx/Y0djQC5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/hEhNgQD1eaV7KBlm6T6O86azE3EhcbgyErGedk8oP14/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMtbmEuc3NsLWlt/YWdlcy1hbWF6b24u/Y29tL2ltYWdlcy9J/LzcxZlJNaVJGVXVM/LmpwZw" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/oeVY8r6TKPWOHN2c1j9ao77B9Fn_yoXrzbiMRn1x8o4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1QlpqUXdZekJs/WXpVdFpqaGhPUzAw/WkRRMExXRTBOekF0/WVRrNE1qZ3paVE5r/WldFelhrRXlYa0Zx/Y0djQC5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/goa2sf838k3H-yq9xSemt_zK4_JqnYAlr_OUZXVS8BE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMxLnNyY2RuLmNv/bS93b3JkcHJlc3Mv/d3AtY29udGVudC91/cGxvYWRzL3RyYWls/ZXJzL2VwaXNvZGVf/cG9zdGVyLzU5NDBf/U2Vhc29uJTIwMS5q/cGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/gAGetR-OqKpNlDRPPpvXga-sxXqwF3g0KN4ZEepvkU0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1Qk9UVTJZbU01/WmpjdE9HVmxNQzAw/WVRjekxUbGpNMk10/WWpobE5HSTVZV015/WmpGa1hrRXlYa0Zx/Y0djQC5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/FfkNxBDih-rueo9_1li35IViVVUKKfhgxvCkV54Aq_w/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJhY2Nlc3Mu/Y29tL2Z1bGwvNzA2/OTM5Ni5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/IdnRbxfGGHwUrN_ikoLpEu5GW5Ih98C1UXc6ICgQ4Yc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMtbmEuc3NsLWlt/YWdlcy1hbWF6b24u/Y29tL2ltYWdlcy9J/LzcxdloxblJLVllM/LmpwZw" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/u_P24vKpFBTB_t8agkMvCm1yT-gFb-7UvleMuM51cPk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1Qll6RTJPRFEw/Tm1RdFltTXhNUzAw/TUdSbExUZ3dPR0V0/WWpSa04yRmtZbVps/TjJKbFhrRXlYa0Zx/Y0djQC5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/hyemosBFsGNjW-JOVVcJMs48WzKCv9ztin1PVLDbAzQ/rs:fit:860:0:0:0/g:ce/aHR0cDovL3d3dy5r/eWxlbGFtYmVydC5j/b20vZ2FsbGVyeS9z/dHJhbmdlci10aGlu/Z3Mtc2Vhc29uLTEt/cG9zdGVyL2ltYWdl/cy9zdHJhbmdlci10/aGluZ3MtcG9zdGVy/LWJ5LWt5bGUtbGFt/YmVydC5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/qs4qshBVIzY8G4k6wzMZMttlZlJpgUsR86oKnU2oFQ0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnJl/ZGQuaXQvMG9jNXkw/eXgzNmtjMS5qcGVn" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/gALGEnZvEYnj3bWZlFtx7qnD9Cn_GQhP8gKyoYYeI8M/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJhY2Nlc3Mu/Y29tL2Z1bGwvNjUy/MDkwNS5qcGc" alt=""></a></li>
-                <li class="movie-poster-box"><a href="#"><img class="recon-poster" src="https://imgs.search.brave.com/dyyg213O_d8Htzt9I7t54M5K87MDAWaokd6I0OFQBY8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMuaGJvLmNvbS8y/MDI0LTAzL1RoZUxh/c3RvZlVzXzI1NjB4/Mzg0MC1jLmpwZw" alt=""></a></li>
-
-            </ul>
+            <ul class="series-list trending-tv-list" id="popularseries"></ul>
         </div>
 
         <button id="series-next-slide" class="series-slider-button">&#10095;</button> 
+    </div>
+</div>
+
+<div class="series-recomen-body">
+    <h1 id="popular-tv-title">Popular TV Shows</h1>
+    <div class="slider-container">
+        <button id="popular-tv-prev-slide" class="series-slider-button">&#10094;</button> 
+        
+        <div class="series-recomen-seriesbox">
+            <ul class="series-list popular-tv-list" id="populartv"></ul>
+        </div>
+
+        <button id="popular-tv-next-slide" class="series-slider-button">&#10095;</button> 
+    </div>
+</div>
+
+<div class="series-recomen-body">
+    <h1 id="toprated-tv-title">Top Rated TV Shows</h1>
+    <div class="slider-container">
+        <button id="toprated-tv-prev-slide" class="series-slider-button">&#10094;</button> 
+        
+        <div class="series-recomen-seriesbox">
+            <ul class="series-list toprated-tv-list" id="topratedtv"></ul>
+        </div>
+
+        <button id="toprated-tv-next-slide" class="series-slider-button">&#10095;</button> 
+    </div>
+</div>
+
+<div class="series-recomen-body">
+    <h1 id="airing-tv-title">Currently Airing</h1>
+    <div class="slider-container">
+        <button id="airing-tv-prev-slide" class="series-slider-button">&#10094;</button> 
+        
+        <div class="series-recomen-seriesbox">
+            <ul class="series-list airing-tv-list" id="airingtv"></ul>
+        </div>
+
+        <button id="airing-tv-next-slide" class="series-slider-button">&#10095;</button> 
     </div>
 </div>
 
@@ -181,6 +231,16 @@
     </div>
 </div>
 
+<div class="watchlist-section" id="watchlist">
+    <div class="watchlist-header-row">
+        <h1 id="watchlist-title">My Watchlist</h1>
+        <p class="watchlist-subtitle">Sign in to add movies to your watchlist.</p>
+    </div>
+    <div id="watchlist-loading" class="watchlist-message hidden">Loading your watchlist...</div>
+    <div id="watchlist-empty" class="watchlist-message">No movies in your watchlist yet.</div>
+    <div id="watchlist-grid" class="watchlist-grid"></div>
+</div>
+
 <div class="footer">
     <div class="footer-main">
         <div class="footer-logo" >
@@ -190,9 +250,9 @@
     <div class="footer-links">
         <h1>Quick Links</h1>
         <a href="#">Home</a>
-        <a href="#popularmovies">Movies</a>
-        <a href="#popularseries">TV Series</a>
-        <a href="#popularfiscus">List</a>
+        <a href="#nowplayingmovies">Now Playing</a>
+        <a href="#upcomingmovies">Upcoming</a>
+        <a href="#populartv">Popular TV</a>
     </div>
     
     <div class="footer-links">
@@ -202,7 +262,7 @@
         <a href="#"> <img src="./images/twitter-16.png" alt="" srcset=""><span>Twitter</span></a>
         <a href="#"> <img src="./images/reddit-16.png" alt="" srcset=""><span>Reddit</span></a>
     </div>
-   <div class="sub-footer"> <p>Powered By: <a href="https://www.omdbapi.com/">OMDb API</a></p>
+    <div class="sub-footer"> <p>Powered By: <a href="https://www.themoviedb.org/documentation/api">TMDb API</a></p>
     <p>Developed By: <a href="https://github.com/MrFiscus">Fiscus Lyrate</a></p></div>
     </div>
     
@@ -215,7 +275,11 @@
     </div>
 
 
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="supabase-auth-watchlist.js"></script>
+<script src="navbar.js"></script>
+<script src="tmdb-config.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

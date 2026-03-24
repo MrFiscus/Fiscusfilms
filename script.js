@@ -9,89 +9,286 @@ window.addEventListener('scroll', () =>{
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    const movieList = document.querySelector(".movie-list");
-    const nextSlide = document.getElementById("recom-next-slide");
-    const prevSlide = document.getElementById("recom-prev-slide");
-    
-    let currentPosition = 0;
-    const slideWidth = 160; 
-    const visibleSlides = 5; 
-
-
-    nextSlide.addEventListener("click", () => {
-        if (currentPosition > -((movieList.children.length - visibleSlides) * slideWidth)) {
-            currentPosition -= slideWidth;
-            movieList.style.transform = `translateX(${currentPosition}px)`;
-        }
-    });
-
-    
-    prevSlide.addEventListener("click", () => {
-        if (currentPosition < 0) {
-            currentPosition += slideWidth;
-            movieList.style.transform = `translateX(${currentPosition}px)`;
-        }
-    });
+    initializeHorizontalSlider(".trending-list", "trending-next-slide", "trending-prev-slide");
+    initializeHorizontalSlider(".popular-list", "recom-next-slide", "recom-prev-slide");
+    initializeHorizontalSlider(".upcoming-list", "upcoming-next-slide", "upcoming-prev-slide");
+    initializeHorizontalSlider(".trending-tv-list", "series-next-slide", "series-prev-slide");
+    initializeHorizontalSlider(".popular-tv-list", "popular-tv-next-slide", "popular-tv-prev-slide");
+    initializeHorizontalSlider(".toprated-tv-list", "toprated-tv-next-slide", "toprated-tv-prev-slide");
+    initializeHorizontalSlider(".airing-tv-list", "airing-tv-next-slide", "airing-tv-prev-slide");
+    initializeHorizontalSlider(".fiscus-list", "fiscus-next-slide", "fiscus-prev-slide");
+    loadHomeMovieRails();
 });
 
+function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId) {
+    const movieList = document.querySelector(listSelector);
+    const nextSlide = document.getElementById(nextButtonId);
+    const prevSlide = document.getElementById(prevButtonId);
+    const sliderViewport = movieList ? movieList.parentElement : null;
 
+    if (!movieList || !nextSlide || !prevSlide || !sliderViewport) {
+        return;
+    }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const movieList = document.querySelector(".series-list");
-    const nextSlide = document.getElementById("series-next-slide");
-    const prevSlide = document.getElementById("series-prev-slide");
-    
-    let currentPosition = 0;
-    const slideWidth = 160; 
-    const visibleSlides = 5; 
+    let currentStep = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let lastGestureAt = 0;
 
-    
-    nextSlide.addEventListener("click", () => {
-        if (currentPosition > -((movieList.children.length - visibleSlides) * slideWidth)) {
-            currentPosition -= slideWidth;
-            movieList.style.transform = `translateX(${currentPosition}px)`;
+    const SWIPE_THRESHOLD = 35;
+    const GESTURE_COOLDOWN_MS = 180;
+
+    function getSliderMetrics() {
+        const firstItem = movieList.querySelector(".movie-poster-box");
+        if (!firstItem) {
+            return null;
         }
-    });
 
+        const firstItemStyle = window.getComputedStyle(firstItem);
+        const marginRight = parseFloat(firstItemStyle.marginRight || "0");
+        const stepWidth = firstItem.getBoundingClientRect().width + marginRight;
+        if (!stepWidth) {
+            return null;
+        }
+
+        const containerWidth = movieList.parentElement ? movieList.parentElement.clientWidth : 0;
+        const visibleSlides = Math.max(1, Math.floor(containerWidth / stepWidth));
+        const maxStep = Math.max(0, movieList.children.length - visibleSlides);
+
+        return { stepWidth, maxStep };
+    }
+
+    function applyTransform() {
+        const metrics = getSliderMetrics();
+        if (!metrics) {
+            return;
+        }
+
+        if (currentStep > metrics.maxStep) {
+            currentStep = metrics.maxStep;
+        }
+
+        movieList.style.transform = `translateX(${-currentStep * metrics.stepWidth}px)`;
+    }
+
+    function goNext() {
+        const metrics = getSliderMetrics();
+        if (!metrics || metrics.maxStep === 0) {
+            return;
+        }
+
+        currentStep = currentStep >= metrics.maxStep ? 0 : currentStep + 1;
+        applyTransform();
+    }
+
+    function goPrev() {
+        const metrics = getSliderMetrics();
+        if (!metrics || metrics.maxStep === 0) {
+            return;
+        }
+
+        currentStep = currentStep <= 0 ? metrics.maxStep : currentStep - 1;
+        applyTransform();
+    }
+
+    function canHandleGesture() {
+        const now = Date.now();
+        if (now - lastGestureAt < GESTURE_COOLDOWN_MS) {
+            return false;
+        }
+
+        lastGestureAt = now;
+        return true;
+    }
+
+    nextSlide.addEventListener("click", () => {
+        goNext();
+    });
 
     prevSlide.addEventListener("click", () => {
-        if (currentPosition < 0) {
-            currentPosition += slideWidth;
-            movieList.style.transform = `translateX(${currentPosition}px)`;
-        }
-    });
-});
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    const movieList = document.querySelector(".fiscus-list");
-    const nextSlide = document.getElementById("fiscus-next-slide");
-    const prevSlide = document.getElementById("fiscus-prev-slide");
-    
-    let currentPosition = 0;
-    const slideWidth = 160; 
-    const visibleSlides = 5; 
-
-    nextSlide.addEventListener("click", () => {
-        if (currentPosition > -((movieList.children.length - visibleSlides) * slideWidth)) {
-            currentPosition -= slideWidth;
-            movieList.style.transform = `translateX(${currentPosition}px)`;
-        }
+        goPrev();
     });
 
-   
-    prevSlide.addEventListener("click", () => {
-        if (currentPosition < 0) {
-            currentPosition += slideWidth;
-            movieList.style.transform = `translateX(${currentPosition}px)`;
+    sliderViewport.addEventListener("touchstart", (event) => {
+        if (!event.touches || !event.touches.length) {
+            return;
         }
+
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+    }, { passive: true });
+
+    sliderViewport.addEventListener("touchend", (event) => {
+        if (!event.changedTouches || !event.changedTouches.length) {
+            return;
+        }
+
+        const deltaX = event.changedTouches[0].clientX - touchStartX;
+        const deltaY = event.changedTouches[0].clientY - touchStartY;
+
+        if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) {
+            return;
+        }
+
+        if (!canHandleGesture()) {
+            return;
+        }
+
+        if (deltaX < 0) {
+            goNext();
+        } else {
+            goPrev();
+        }
+    }, { passive: true });
+
+    sliderViewport.addEventListener("wheel", (event) => {
+        const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+            ? event.deltaX
+            : (event.shiftKey ? event.deltaY : 0);
+
+        if (Math.abs(horizontalIntent) < 20) {
+            return;
+        }
+
+        if (!canHandleGesture()) {
+            return;
+        }
+
+        event.preventDefault();
+        if (horizontalIntent > 0) {
+            goNext();
+        } else {
+            goPrev();
+        }
+    }, { passive: false });
+
+    window.addEventListener("resize", applyTransform);
+}
+
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
+
+function getTmdbApiKey() {
+    if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
+        return null;
+    }
+
+    if (window.TMDB_CONFIG.apiKey.includes("YOUR_TMDB_API_KEY")) {
+        return null;
+    }
+
+    return window.TMDB_CONFIG.apiKey;
+}
+
+async function loadHomeMovieRails() {
+    const tmdbApiKey = getTmdbApiKey();
+    renderRailMessage("trendingmovies", "Loading Trending Today...");
+    renderRailMessage("nowplayingmovies", "Loading Now Playing...");
+    renderRailMessage("upcomingmovies", "Loading Upcoming Movies...");
+    renderRailMessage("popularseries", "Loading Trending TV Shows...");
+    renderRailMessage("populartv", "Loading Popular TV Shows...");
+    renderRailMessage("topratedtv", "Loading Top Rated TV Shows...");
+    renderRailMessage("airingtv", "Loading Currently Airing...");
+
+    if (!tmdbApiKey) {
+        console.warn("TMDb key missing. Add it to tmdb-config.js to load content.");
+        renderRailMessage("trendingmovies", "Add TMDb API key in tmdb-config.js");
+        renderRailMessage("nowplayingmovies", "Add TMDb API key in tmdb-config.js");
+        renderRailMessage("upcomingmovies", "Add TMDb API key in tmdb-config.js");
+        renderRailMessage("popularseries", "Add TMDb API key in tmdb-config.js");
+        renderRailMessage("populartv", "Add TMDb API key in tmdb-config.js");
+        renderRailMessage("topratedtv", "Add TMDb API key in tmdb-config.js");
+        renderRailMessage("airingtv", "Add TMDb API key in tmdb-config.js");
+        return;
+    }
+
+    await Promise.all([
+        loadTmdbRail("/trending/movie/day", "trendingmovies", tmdbApiKey),
+        loadTmdbRail("/movie/now_playing", "nowplayingmovies", tmdbApiKey),
+        loadTmdbRail("/movie/upcoming", "upcomingmovies", tmdbApiKey),
+        loadTmdbRail("/trending/tv/day", "popularseries", tmdbApiKey),
+        loadTmdbRail("/tv/popular", "populartv", tmdbApiKey),
+        loadTmdbRail("/tv/top_rated", "topratedtv", tmdbApiKey),
+        loadTmdbRail("/tv/on_the_air", "airingtv", tmdbApiKey)
+    ]);
+}
+
+async function loadTmdbRail(endpoint, listElementId, apiKey) {
+    const movieList = document.getElementById(listElementId);
+    if (!movieList) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${apiKey}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.success === false) {
+            throw new Error(data.status_message || "TMDb returned an error");
+        }
+
+        const movies = (data.results || []).slice(0, 20);
+        if (!movies.length) {
+            renderRailMessage(listElementId, "No movies returned by TMDb");
+            return;
+        }
+
+        renderTmdbMovieList(movieList, movies);
+    } catch (error) {
+        console.error(`Failed to load ${listElementId}:`, error);
+        renderRailMessage(listElementId, `Could not load TMDb movies (${error.message})`);
+    }
+}
+
+function renderTmdbMovieList(movieList, movies) {
+    movieList.innerHTML = "";
+
+    movies.forEach((movie) => {
+        const mediaTitle = movie.title || movie.name || "Untitled";
+        const mediaDate = movie.release_date || movie.first_air_date || "";
+        const mediaType = movie.media_type || (movie.first_air_date ? "tv" : "movie");
+        const posterPath = movie.poster_path
+            ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
+            : "https://via.placeholder.com/300x450?text=No+Poster";
+        const year = mediaDate ? mediaDate.split("-")[0] : "N/A";
+
+        const listItem = document.createElement("li");
+        listItem.className = "movie-poster-box";
+        listItem.innerHTML = `
+            <a class="home-movie-link" href="movies.html" data-tmdb-id="${movie.id}" data-media-type="${mediaType}" data-movie-title="${mediaTitle}" data-movie-year="${year}" data-movie-poster="${posterPath}">
+                <img class="recon-poster" src="${posterPath}" alt="${mediaTitle}">
+            </a>
+        `;
+
+        movieList.appendChild(listItem);
     });
-});
 
+    movieList.querySelectorAll(".home-movie-link").forEach((link) => {
+        link.addEventListener("click", () => {
+            localStorage.setItem("tmdbMovieID", link.dataset.tmdbId);
+            localStorage.setItem("tmdbMediaType", link.dataset.mediaType || "movie");
+            localStorage.removeItem("movieID");
+        });
+    });
+}
 
+function renderRailMessage(listElementId, message) {
+    const movieList = document.getElementById(listElementId);
+    if (!movieList) {
+        return;
+    }
 
-
+    movieList.innerHTML = `
+        <li class="movie-poster-box">
+            <div class="recon-poster" style="display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(255,255,255,0.08);text-align:center;padding:12px;line-height:1.3;">
+                ${message}
+            </div>
+        </li>
+    `;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     let currentSlide = 1;
@@ -217,20 +414,22 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// Titles: https://omdbapi.com/?s=thor&page=1&apikey=620186d3
-// details: http://www.omdbapi.com/?i=tt3896198&apikey=620186d3
-
 const movieSearchBox = document.getElementById('movie-search-box');
 const searchList = document.getElementById('search-list');
 const resultGrid = document.getElementById('result-grid');
 
 
 async function loadMovies(searchTerm){
-    const URL = `https://omdbapi.com/?s=${searchTerm}&page=1&apikey=620186d3`;
-    const res = await fetch(`${URL}`);
+    const tmdbApiKey = getTmdbApiKey();
+    if (!tmdbApiKey) {
+        return;
+    }
+
+    const URL = `${TMDB_BASE_URL}/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(searchTerm)}&include_adult=false&page=1`;
+    const res = await fetch(URL);
     const data = await res.json();
-    // console.log(data.Search);
-    if(data.Response == "True") displayMovieList(data.Search);
+    const mediaResults = (data.results || []).filter((item) => item.media_type === 'movie' || item.media_type === 'tv');
+    displayMovieList(mediaResults);
 }
 
 function findMovies(){
@@ -245,22 +444,32 @@ function findMovies(){
 
 function displayMovieList(movies){
     searchList.innerHTML = "";
+
+    if (!movies.length) {
+        searchList.classList.add('hide-search-list');
+        return;
+    }
+
     for(let idx = 0; idx < movies.length; idx++){
         let movieListItem = document.createElement('div');
-        movieListItem.dataset.id = movies[idx].imdbID; // movie id in  data-id
+        movieListItem.dataset.id = movies[idx].id;
+        movieListItem.dataset.mediaType = movies[idx].media_type || 'movie';
         movieListItem.classList.add('search-list-item');
-        if(movies[idx].Poster != "N/A")
-            moviePoster = movies[idx].Poster;
-        else 
-            moviePoster = "image_not_found.png";
+        const moviePoster = movies[idx].poster_path
+            ? `${TMDB_IMAGE_BASE}${movies[idx].poster_path}`
+            : "https://via.placeholder.com/300x450?text=No+Poster";
+        const mediaTitle = movies[idx].title || movies[idx].name || 'Untitled';
+        const mediaDate = movies[idx].release_date || movies[idx].first_air_date;
+        const movieYear = mediaDate ? mediaDate.split("-")[0] : "N/A";
+        const mediaLabel = (movies[idx].media_type || 'movie').toUpperCase();
 
         movieListItem.innerHTML = `
         <div class = "search-item-thumbnail">
             <img src = "${moviePoster}">
         </div>
         <div class = "search-item-info">
-            <h3>${movies[idx].Title}</h3>
-            <p>${movies[idx].Year}</p>
+            <h3>${mediaTitle}</h3>
+            <p>${movieYear} • ${mediaLabel}</p>
         </div>
         `;
         searchList.appendChild(movieListItem);
@@ -287,72 +496,24 @@ function loadMovieDetails() {
     const searchListMovies = searchList.querySelectorAll('.search-list-item');
     searchListMovies.forEach(movie => {
         movie.addEventListener('click', () => {
+            const titleEl = movie.querySelector('.search-item-info h3');
+            const yearEl = movie.querySelector('.search-item-info p');
+            if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
+                window.FiscusAuth.addSearchHistory({
+                    tmdb_id: movie.dataset.id,
+                    title: titleEl ? titleEl.textContent : 'Unknown',
+                    year: yearEl ? yearEl.textContent : 'N/A'
+                });
+            }
+
             searchList.classList.add('hide-search-list');
             movieSearchBox.value = "";
-            localStorage.setItem('movieID', movie.dataset.id); 
-            window.location.href = 'movies.html'; // Redirect to movies.html
+            localStorage.setItem('tmdbMovieID', movie.dataset.id);
+            localStorage.setItem('tmdbMediaType', movie.dataset.mediaType || 'movie');
+            localStorage.removeItem('movieID');
+            window.location.href = 'movies.html';
         });
     });
-}
-
-
-// function displayMovieDetails(details){
-//     resultGrid.innerHTML = `
-//     <div class = "movie-poster">
-//         <img src = "${(details.Poster != "N/A") ? details.Poster : "image_not_found.png"}" alt = "movie poster">
-//     </div>
-//     <div class = "movie-info">
-//         <h3 class = "movie-title">${details.Title}</h3>
-//         <ul class = "movie-misc-info">
-//             <li class = "year">Year: ${details.Year}</li>
-//             <li class = "rated">Ratings: ${details.Rated}</li>
-//             <li class = "released">Released: ${details.Released}</li>
-//         </ul>
-//         <p class = "genre"><b>Genre:</b> ${details.Genre}</p>
-//         <p class = "writer"><b>Writer:</b> ${details.Writer}</p>
-//         <p class = "actors"><b>Actors: </b>${details.Actors}</p>
-//         <p class = "plot"><b>Plot:</b> ${details.Plot}</p>
-//         <p class = "language"><b>Language:</b> ${details.Language}</p>
-//         <p class = "awards"><b><i class = "fas fa-award"></i></b> ${details.Awards}</p>
-//         <p class = "imdb-id"><b>IMDb ID:</b> ${details.imdbID}</p>
-
-
-//     </div>
-//     `;
-// }
-
-function displayMovieDetails(details){
-    let embedLink = '';
-
-    
-    if (details.Type === 'series') {
-        const seasonNumber = 1;
-        const episodeNumber = 1;
-        embedLink = `https://www.imdb.com/title/${details.imdbID}`;
-    } else if (details.Type === 'movie') {
-        embedLink = `https://www.imdb.com/title/${details.imdbID}`;
-    }
-
-    resultGrid.innerHTML = `
-    <div class = "movie-poster">
-        <img src = "${(details.Poster != "N/A") ? details.Poster : "image_not_found.png"}" alt = "movie poster">
-    </div>
-    <div class = "movie-info">
-        <h3 class = "movie-title">${details.Title}</h3>
-        <ul class = "movie-misc-info">
-            <li class = "year">Year: ${details.Year}</li>
-            <li class = "rated">Ratings: ${details.Rated}</li>
-            <li class = "released">Released: ${details.Released}</li>
-        </ul>
-        <p class = "genre"><b>Genre:</b> ${details.Genre}</p>
-        <p class = "writer"><b>Writer:</b> ${details.Writer}</p>
-        <p class = "actors"><b>Actors: </b>${details.Actors}</p>
-        <p class = "plot"><b>Plot:</b> ${details.Plot}</p>
-        <p class = "language"><b>Language:</b> ${details.Language}</p>
-        <p class = "awards"><b><i class = "fas fa-award"></i></b> ${details.Awards}</p>
-        <p class = "embed-link"><b>Watch:</b> <a href="${embedLink}" target="_blank">Click here to watch</a></p> <!-- Embed link here -->
-    </div>
-    `;
 }
 
 window.addEventListener('click', (event) => {
