@@ -13,7 +13,7 @@
   </style>
   <link rel="icon" type="image/png" href="./image-removebg-preview (1).png">
 </head>
-<body>
+<body class="profile-view">
   <div class="body-movie-poster">
     <div class="nav-bar" id="navbar">
       <div class="logo">
@@ -69,83 +69,70 @@
 
     <main class="profile-page-main">
       <section class="profile-dashboard-shell">
-        <header class="profile-hero">
-          <div class="profile-hero-main">
-            <img id="profile-avatar-preview" class="profile-hero-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile avatar">
-            <div class="profile-hero-info">
-              <h1 id="profile-name-heading">Guest User</h1>
-              <div class="profile-meta-row">
-                <div class="profile-meta-pill">
-                  <span>Member since</span>
-                  <strong id="profile-member-since">-</strong>
+        <div class="profile-image-surface">
+          <header class="profile-hero-banner">
+            <div class="profile-hero-overlay">
+              <div class="profile-hero-main">
+                <img id="profile-avatar-preview" class="profile-hero-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile avatar">
+                <div class="profile-hero-info">
+                  <h1 id="profile-name-heading">Guest User</h1>
+                  <p class="profile-member-line">Member since <span id="profile-member-since">-</span></p>
+                  <p id="profile-auth-status" class="profile-auth-status-line">Sign in to view your profile</p>
                 </div>
-                <div class="profile-meta-pill">
-                  <span>Status</span>
-                  <strong id="profile-status-indicator" class="profile-status-offline">Offline</strong>
+              </div>
+              <div class="profile-hero-stats">
+                <div class="profile-stat-item">
+                  <span id="overview-watchlist-count" class="profile-stat-value">0</span>
+                  <span class="profile-stat-label">watchlisted</span>
+                </div>
+                <div class="profile-stat-item">
+                  <span id="overview-favorites-count" class="profile-stat-value">0</span>
+                  <span class="profile-stat-label">favorites</span>
                 </div>
               </div>
             </div>
-          </div>
+          </header>
+
           <div class="profile-auth-actions">
             <button id="profile-login-btn" class="auth-btn">Sign in</button>
             <button id="profile-logout-btn" class="auth-btn auth-btn-secondary profile-logout-btn hidden">Logout</button>
           </div>
-        </header>
 
+          <section class="profile-rails-section">
+            <h2>Favorite Movies</h2>
+            <div class="profile-rail-slider slider-container">
+              <button id="profile-favorites-prev" class="profile-rail-button slider-button" aria-label="Previous favorites">&#10094;</button>
+              <div class="profile-rail-viewport movie-recomen-moviesbox">
+                <ul id="profile-favorites-list" class="movie-list profile-rail-list"></ul>
+              </div>
+              <button id="profile-favorites-next" class="profile-rail-button slider-button" aria-label="Next favorites">&#10095;</button>
+            </div>
+            <p id="profile-favorites-empty" class="profile-rail-empty hidden">No movies yet</p>
+          </section>
+        </div>
 
-        <section class="profile-collection-section">
-          <div class="profile-collection-header">
-            <h2>Movies Collection</h2>
+        <section class="profile-rails-section">
+          <h2>Watchlisted</h2>
+          <div class="profile-rail-slider slider-container">
+            <button id="profile-watchlist-prev" class="profile-rail-button slider-button" aria-label="Previous watchlist">&#10094;</button>
+            <div class="profile-rail-viewport movie-recomen-moviesbox">
+              <ul id="profile-watchlist-list" class="movie-list profile-rail-list"></ul>
+            </div>
+            <button id="profile-watchlist-next" class="profile-rail-button slider-button" aria-label="Next watchlist">&#10095;</button>
           </div>
-          <div class="profile-collection-grid">
-            <article class="profile-collection-card">
-              <div class="profile-collection-title-row">
-                <h3>Favorites</h3>
-              </div>
-              <ul id="profile-favorites-list" class="profile-mini-list">
-                <li>No movies yet</li>
-              </ul>
-            </article>
-
-            <article class="profile-collection-card">
-              <div class="profile-collection-title-row">
-                <h3>Watchlist</h3>
-              </div>
-              <ul id="profile-watchlist-list" class="profile-mini-list">
-                <li>No movies yet</li>
-              </ul>
-            </article>
-
-            <article class="profile-collection-card">
-              <div class="profile-collection-title-row">
-                <h3>History</h3>
-              </div>
-              <ul id="profile-history-list" class="profile-mini-list">
-                <li>No movies yet</li>
-              </ul>
-            </article>
-          </div>
+          <p id="profile-watchlist-empty" class="profile-rail-empty hidden">No movies yet</p>
         </section>
 
-        <section class="profile-quick-overview">
-          <h2>Quick Overview</h2>
-          <div class="quick-overview-grid">
-            <div class="overview-card">
-              <img class="overview-icon" src="https://cdn-icons-png.flaticon.com/128/833/833472.png" alt="Favorites heart icon">
-              <div class="overview-label">Movie Favorites</div>
-              <div id="overview-favorites-count" class="overview-count">0</div>
+        <section class="profile-rails-section">
+          <h2>History</h2>
+          <div class="profile-rail-slider slider-container">
+            <button id="profile-history-prev" class="profile-rail-button slider-button" aria-label="Previous history">&#10094;</button>
+            <div class="profile-rail-viewport movie-recomen-moviesbox">
+              <ul id="profile-history-list" class="movie-list profile-rail-list"></ul>
             </div>
-            <div class="overview-card">
-              <img class="overview-icon" src="https://cdn-icons-png.flaticon.com/128/4221/4221484.png" alt="Watching a movie icon">
-              <div class="overview-label">Movie Watchlist</div>
-              <div id="overview-watchlist-count" class="overview-count">0</div>
-            </div>
-            <div class="overview-card">
-              <img class="overview-icon" src="https://cdn-icons-png.flaticon.com/128/751/751463.png" alt="Search icon">
-              <div class="overview-label">Movies Searched</div>
-              <div id="overview-history-count" class="overview-count">0</div>
-            </div>
+            <button id="profile-history-next" class="profile-rail-button slider-button" aria-label="Next history">&#10095;</button>
           </div>
+          <p id="profile-history-empty" class="profile-rail-empty hidden">No movies yet</p>
         </section>
 
         <section class="profile-editor-section">
