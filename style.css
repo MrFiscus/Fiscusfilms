@@ -144,6 +144,7 @@ top: 0;
 z-index: 9999;
 background-color: transparent ;
 transition: background-color 0.3s ease;
+width: ;
 
 }
 .nav-colored { background-color: var(--dark-color);}
