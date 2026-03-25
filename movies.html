@@ -130,10 +130,64 @@
 
                 return window.TMDB_CONFIG.apiKey;
             }
+
+            function getRequestedImdbId() {
+                const params = new URLSearchParams(window.location.search);
+                return params.get('movie') || localStorage.getItem('movieID') || localStorage.getItem('selectedMovieID') || '';
+            }
+
+            async function resolveTmdbSelection(tmdbApiKey) {
+                const requestedImdbId = getRequestedImdbId();
+                if (!requestedImdbId) {
+                    return {
+                        tmdbMovieID: localStorage.getItem('tmdbMovieID') || '',
+                        tmdbMediaType: localStorage.getItem('tmdbMediaType') || 'movie',
+                        errorMessage: ''
+                    };
+                }
+
+                try {
+                    const response = await fetch(`${TMDB_BASE_URL}/find/${encodeURIComponent(requestedImdbId)}?api_key=${tmdbApiKey}&external_source=imdb_id`);
+                    if (!response.ok) {
+                        return {
+                            tmdbMovieID: '',
+                            tmdbMediaType: 'movie',
+                            errorMessage: 'Could not resolve the selected movie from IMDb id.'
+                        };
+                    }
+
+                    const result = await response.json();
+                    const movieMatch = (result.movie_results && result.movie_results[0]) || null;
+                    const tvMatch = (result.tv_results && result.tv_results[0]) || null;
+                    const match = movieMatch || tvMatch;
+                    const mediaType = movieMatch ? 'movie' : 'tv';
+
+                    if (!match || !match.id) {
+                        return {
+                            tmdbMovieID: '',
+                            tmdbMediaType: 'movie',
+                            errorMessage: 'The selected title could not be found on TMDb.'
+                        };
+                    }
+
+                    localStorage.setItem('tmdbMovieID', String(match.id));
+                    localStorage.setItem('tmdbMediaType', mediaType);
+
+                    return {
+                        tmdbMovieID: String(match.id),
+                        tmdbMediaType: mediaType,
+                        errorMessage: ''
+                    };
+                } catch (error) {
+                    return {
+                        tmdbMovieID: '',
+                        tmdbMediaType: 'movie',
+                        errorMessage: 'Could not resolve the selected movie from IMDb id.'
+                    };
+                }
+            }
     
             async function displayMovieDetails() {
-                const tmdbMovieID = localStorage.getItem('tmdbMovieID');
-                const tmdbMediaType = localStorage.getItem('tmdbMediaType') || 'movie';
                 const tmdbApiKey = getTmdbApiKey();
 
                 if (!tmdbApiKey) {
@@ -141,8 +195,12 @@
                     return;
                 }
 
+                const selection = await resolveTmdbSelection(tmdbApiKey);
+                const tmdbMovieID = selection.tmdbMovieID;
+                const tmdbMediaType = selection.tmdbMediaType;
+
                 if (!tmdbMovieID) {
-                    movieDetailsContainer.innerHTML = '<p>No movie selected. Use search or a movie list to open details.</p>';
+                    movieDetailsContainer.innerHTML = `<p>${selection.errorMessage || 'No movie selected. Use search or a movie list to open details.'}</p>`;
                     return;
                 }
 
@@ -448,8 +506,10 @@
                                 const cardImage = link.querySelector('.recon-poster');
                                 window.FiscusAuth.addSearchHistory({
                                     tmdb_id: selectedId,
+                                    media_type: selectedType,
                                     title: cardImage ? cardImage.alt : 'Unknown',
-                                    year: 'N/A'
+                                    year: 'N/A',
+                                    poster: cardImage ? cardImage.src : ''
                                 });
                             }
 

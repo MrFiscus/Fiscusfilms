@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeHorizontalSlider(".trending-list", "trending-next-slide", "trending-prev-slide");
     initializeHorizontalSlider(".popular-list", "recom-next-slide", "recom-prev-slide");
     initializeHorizontalSlider(".upcoming-list", "upcoming-next-slide", "upcoming-prev-slide");
+    initializeHorizontalSlider(".toprated-movies-list", "toprated-movies-next-slide", "toprated-movies-prev-slide");
     initializeHorizontalSlider(".trending-tv-list", "series-next-slide", "series-prev-slide");
     initializeHorizontalSlider(".popular-tv-list", "popular-tv-next-slide", "popular-tv-prev-slide");
     initializeHorizontalSlider(".toprated-tv-list", "toprated-tv-next-slide", "toprated-tv-prev-slide");
@@ -169,6 +170,12 @@ function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId) {
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
+const HOME_ACTION_ICONS = {
+    watch: "play-512.png",
+    watchlist: "plus-2-512.png",
+    favorite: "favorite-2-512.png"
+};
+const imdbCache = new Map();
 
 function getTmdbApiKey() {
     if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
@@ -187,6 +194,7 @@ async function loadHomeMovieRails() {
     renderRailMessage("trendingmovies", "Loading Trending Today...");
     renderRailMessage("nowplayingmovies", "Loading Now Playing...");
     renderRailMessage("upcomingmovies", "Loading Upcoming Movies...");
+    renderRailMessage("topratedmovies", "Loading Top Rated Movies...");
     renderRailMessage("popularseries", "Loading Trending TV Shows...");
     renderRailMessage("populartv", "Loading Popular TV Shows...");
     renderRailMessage("topratedtv", "Loading Top Rated TV Shows...");
@@ -197,6 +205,7 @@ async function loadHomeMovieRails() {
         renderRailMessage("trendingmovies", "Add TMDb API key in tmdb-config.js");
         renderRailMessage("nowplayingmovies", "Add TMDb API key in tmdb-config.js");
         renderRailMessage("upcomingmovies", "Add TMDb API key in tmdb-config.js");
+        renderRailMessage("topratedmovies", "Add TMDb API key in tmdb-config.js");
         renderRailMessage("popularseries", "Add TMDb API key in tmdb-config.js");
         renderRailMessage("populartv", "Add TMDb API key in tmdb-config.js");
         renderRailMessage("topratedtv", "Add TMDb API key in tmdb-config.js");
@@ -208,6 +217,7 @@ async function loadHomeMovieRails() {
         loadTmdbRail("/trending/movie/day", "trendingmovies", tmdbApiKey),
         loadTmdbRail("/movie/now_playing", "nowplayingmovies", tmdbApiKey),
         loadTmdbRail("/movie/upcoming", "upcomingmovies", tmdbApiKey),
+        loadTmdbRail("/movie/top_rated", "topratedmovies", tmdbApiKey),
         loadTmdbRail("/trending/tv/day", "popularseries", tmdbApiKey),
         loadTmdbRail("/tv/popular", "populartv", tmdbApiKey),
         loadTmdbRail("/tv/top_rated", "topratedtv", tmdbApiKey),
@@ -245,6 +255,135 @@ async function loadTmdbRail(endpoint, listElementId, apiKey) {
     }
 }
 
+function escapeHtml(value) {
+    return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
+function openHomeRailMovie(cardEl) {
+    if (!cardEl) {
+        return;
+    }
+
+    const tmdbId = cardEl.dataset.tmdbId;
+    const mediaType = cardEl.dataset.mediaType || "movie";
+    if (!tmdbId) {
+        return;
+    }
+
+    if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
+        window.FiscusAuth.addSearchHistory({
+            tmdb_id: tmdbId,
+            media_type: mediaType,
+            title: cardEl.dataset.movieTitle || "Unknown",
+            year: cardEl.dataset.movieYear || "N/A",
+            poster: cardEl.dataset.moviePoster || ""
+        });
+    }
+
+    localStorage.setItem("tmdbMovieID", tmdbId);
+    localStorage.setItem("tmdbMediaType", mediaType);
+    localStorage.removeItem("movieID");
+    window.location.href = "movies.html";
+}
+
+async function resolveImdbId(tmdbId, mediaType) {
+    if (!tmdbId) {
+        return "";
+    }
+
+    const cacheKey = `${mediaType || "movie"}:${tmdbId}`;
+    if (imdbCache.has(cacheKey)) {
+        return imdbCache.get(cacheKey);
+    }
+
+    const apiKey = getTmdbApiKey();
+    if (!apiKey) {
+        return "";
+    }
+
+    try {
+        if (mediaType === "tv") {
+            const tvResponse = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}/external_ids?api_key=${apiKey}`);
+            if (!tvResponse.ok) {
+                imdbCache.set(cacheKey, "");
+                return "";
+            }
+
+            const tvData = await tvResponse.json();
+            const tvImdb = tvData && tvData.imdb_id ? String(tvData.imdb_id) : "";
+            imdbCache.set(cacheKey, tvImdb);
+            return tvImdb;
+        }
+
+        const movieResponse = await fetch(`${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${apiKey}`);
+        if (!movieResponse.ok) {
+            imdbCache.set(cacheKey, "");
+            return "";
+        }
+
+        const movieData = await movieResponse.json();
+        const movieImdb = movieData && movieData.imdb_id ? String(movieData.imdb_id) : "";
+        imdbCache.set(cacheKey, movieImdb);
+        return movieImdb;
+    } catch (error) {
+        imdbCache.set(cacheKey, "");
+        return "";
+    }
+}
+
+async function handleHomeRailAction(cardEl, action) {
+    if (!cardEl || !action) {
+        return;
+    }
+
+    if (action === "watch") {
+        openHomeRailMovie(cardEl);
+        return;
+    }
+
+    const tmdbId = cardEl.dataset.tmdbId || "";
+    const mediaType = cardEl.dataset.mediaType || "movie";
+    const imdbId = cardEl.dataset.imdbId || await resolveImdbId(tmdbId, mediaType);
+    if (!imdbId) {
+        return;
+    }
+
+    cardEl.dataset.imdbId = imdbId;
+
+    const moviePayload = {
+        imdb_id: imdbId,
+        tmdb_id: tmdbId,
+        title: cardEl.dataset.movieTitle || "Untitled",
+        year: cardEl.dataset.movieYear || "",
+        poster: cardEl.dataset.moviePoster || "",
+        type: mediaType
+    };
+
+    if (action === "watchlist" && window.FiscusAuth && window.FiscusAuth.addMovieToWatchlist) {
+        const result = await window.FiscusAuth.addMovieToWatchlist(moviePayload);
+        if (result && result.ok) {
+            const btn = cardEl.querySelector('[data-action="watchlist"]');
+            if (btn) {
+                btn.setAttribute("aria-pressed", "true");
+            }
+        }
+        return;
+    }
+
+    if (action === "favorite" && window.FiscusAuth && window.FiscusAuth.toggleFavoriteMovie) {
+        const result = window.FiscusAuth.toggleFavoriteMovie(moviePayload);
+        const btn = cardEl.querySelector('[data-action="favorite"]');
+        if (btn && result && result.ok) {
+            btn.setAttribute("aria-pressed", result.liked ? "true" : "false");
+        }
+    }
+}
+
 function renderTmdbMovieList(movieList, movies) {
     movieList.innerHTML = "";
 
@@ -256,25 +395,70 @@ function renderTmdbMovieList(movieList, movies) {
             ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
             : "https://via.placeholder.com/300x450?text=No+Poster";
         const year = mediaDate ? mediaDate.split("-")[0] : "N/A";
+        const safeTitle = escapeHtml(mediaTitle);
+        const safeYear = escapeHtml(year);
+        const safePoster = escapeHtml(posterPath);
+        const safeType = escapeHtml(mediaType);
+        const safeTmdbId = escapeHtml(movie.id);
+        const safePlayIcon = escapeHtml(HOME_ACTION_ICONS.watch);
+        const safeWatchlistIcon = escapeHtml(HOME_ACTION_ICONS.watchlist);
+        const safeFavoriteIcon = escapeHtml(HOME_ACTION_ICONS.favorite);
 
         const listItem = document.createElement("li");
-        listItem.className = "movie-poster-box";
+        listItem.className = "movie-poster-box home-rail-card";
+        listItem.dataset.tmdbId = String(movie.id);
+        listItem.dataset.mediaType = mediaType;
+        listItem.dataset.movieTitle = mediaTitle;
+        listItem.dataset.movieYear = year;
+        listItem.dataset.moviePoster = posterPath;
         listItem.innerHTML = `
-            <a class="home-movie-link" href="movies.html" data-tmdb-id="${movie.id}" data-media-type="${mediaType}" data-movie-title="${mediaTitle}" data-movie-year="${year}" data-movie-poster="${posterPath}">
-                <img class="recon-poster" src="${posterPath}" alt="${mediaTitle}">
-            </a>
+            <img class="recon-poster" src="${safePoster}" alt="${safeTitle}">
+            <div class="home-rail-overlay">
+                <h3>${safeTitle}${safeYear ? ` (${safeYear})` : ""}</h3>
+                <p>${safeType.toUpperCase()}</p>
+                <div class="home-rail-actions">
+                    <button class="home-rail-icon-btn" type="button" data-action="watch" aria-label="Play now" title="Play now">
+                        <img src="${safePlayIcon}" alt="" loading="lazy">
+                    </button>
+                    <button class="home-rail-icon-btn" type="button" data-action="watchlist" aria-label="Add to watchlist" title="Add to watchlist" aria-pressed="false">
+                        <img src="${safeWatchlistIcon}" alt="" loading="lazy">
+                    </button>
+                    <button class="home-rail-icon-btn" type="button" data-action="favorite" aria-label="Add to favorite" title="Add to favorite" aria-pressed="false">
+                        <img src="${safeFavoriteIcon}" alt="" loading="lazy">
+                    </button>
+                </div>
+            </div>
         `;
 
         movieList.appendChild(listItem);
     });
 
-    movieList.querySelectorAll(".home-movie-link").forEach((link) => {
-        link.addEventListener("click", () => {
-            localStorage.setItem("tmdbMovieID", link.dataset.tmdbId);
-            localStorage.setItem("tmdbMediaType", link.dataset.mediaType || "movie");
-            localStorage.removeItem("movieID");
+    if (movieList.dataset.actionsBound !== "true") {
+        movieList.addEventListener("click", async (event) => {
+            const actionBtn = event.target.closest("[data-action]");
+            if (actionBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const cardEl = actionBtn.closest(".home-rail-card");
+                if (!cardEl) {
+                    return;
+                }
+
+                const action = actionBtn.dataset.action;
+                await handleHomeRailAction(cardEl, action);
+                return;
+            }
+
+            const cardEl = event.target.closest(".home-rail-card");
+            if (!cardEl) {
+                return;
+            }
+            openHomeRailMovie(cardEl);
         });
-    });
+
+        movieList.dataset.actionsBound = "true";
+    }
 }
 
 function renderRailMessage(listElementId, message) {
@@ -500,11 +684,14 @@ function loadMovieDetails() {
         movie.addEventListener('click', () => {
             const titleEl = movie.querySelector('.search-item-info h3');
             const yearEl = movie.querySelector('.search-item-info p');
+            const posterEl = movie.querySelector('.search-item-thumbnail img');
             if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
                 window.FiscusAuth.addSearchHistory({
                     tmdb_id: movie.dataset.id,
+                    media_type: movie.dataset.mediaType || 'movie',
                     title: titleEl ? titleEl.textContent : 'Unknown',
-                    year: yearEl ? yearEl.textContent : 'N/A'
+                    year: yearEl ? yearEl.textContent : 'N/A',
+                    poster: posterEl ? posterEl.src : ''
                 });
             }
 

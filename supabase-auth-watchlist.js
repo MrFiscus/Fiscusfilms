@@ -16,6 +16,7 @@
   const authTermsRow = document.getElementById("auth-terms-row");
   const authTermsCheckbox = document.getElementById("auth-terms");
   const authSubmitBtn = document.getElementById("auth-submit-btn");
+  const resendVerifyBtn = document.getElementById("resend-verify-btn");
   const facebookBtn = document.getElementById("facebook-btn");
   const profileLink = document.getElementById("profile-link");
   const profileAvatar = profileLink ? profileLink.querySelector(".profile-avatar") : null;
@@ -27,6 +28,7 @@
   let supabaseClient = null;
   let currentUser = null;
   let authMode = "signup";
+  let pendingVerificationEmail = "";
 
   function isConfigured() {
     if (!window.SUPABASE_CONFIG || !window.supabase) {
@@ -50,6 +52,14 @@
         statusEl.classList.add("hidden");
       }
     }
+  }
+
+  function showResendVerificationButton(show) {
+    if (!resendVerifyBtn) {
+      return;
+    }
+
+    resendVerifyBtn.classList.toggle("hidden", !show);
   }
 
   function resolveUserAvatar(user) {
@@ -139,6 +149,36 @@
     if (authPasswordInput) {
       authPasswordInput.setAttribute("autocomplete", signingIn ? "current-password" : "new-password");
     }
+
+    if (!signingIn) {
+      pendingVerificationEmail = "";
+      showResendVerificationButton(false);
+    }
+  }
+
+  async function resendVerificationEmail(email) {
+    if (!supabaseClient) {
+      return { ok: false, message: "Auth is not configured." };
+    }
+
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (!normalizedEmail) {
+      return { ok: false, message: "Enter your email first." };
+    }
+
+    const { error } = await supabaseClient.auth.resend({
+      type: "signup",
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: window.SUPABASE_CONFIG.redirectTo
+      }
+    });
+
+    if (error) {
+      return { ok: false, message: error.message || "Could not resend verification email." };
+    }
+
+    return { ok: true, message: "Verification email sent. Check your inbox and spam folder." };
   }
 
   async function signInWithEmailPassword(email, password) {
@@ -146,7 +186,8 @@
       return { ok: false, message: "Auth is not configured." };
     }
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email: normalizedEmail, password });
     if (error) {
       return { ok: false, message: error.message || "Could not sign in." };
     }
@@ -160,8 +201,9 @@
     }
 
     const fullName = `${payload.firstName} ${payload.lastName}`.trim();
+    const normalizedEmail = String(payload.email || "").trim().toLowerCase();
     const { data, error } = await supabaseClient.auth.signUp({
-      email: payload.email,
+      email: normalizedEmail,
       password: payload.password,
       options: {
         data: {
@@ -212,11 +254,20 @@
       }
 
       if (!result.ok) {
-        setAuthStatus(result.message);
+        const rawMessage = String(result.message || "");
+        if (rawMessage.toLowerCase().includes("invalid login credentials")) {
+          setAuthStatus("Invalid credentials. If you just created this account, confirm your email first, then try again.");
+          pendingVerificationEmail = email;
+          showResendVerificationButton(true);
+        } else {
+          setAuthStatus(rawMessage);
+          showResendVerificationButton(false);
+        }
         return;
       }
 
       setAuthStatus("Signed in. Redirecting to profile...");
+      showResendVerificationButton(false);
       window.location.href = "profile.html";
       return;
     }
@@ -253,12 +304,15 @@
     }
 
     if (result.needsEmailConfirm) {
-      setAuthStatus("Account created. Check your email to confirm and then sign in.");
+      setAuthStatus("Account created. Check your email to confirm your account, then sign in.");
+      pendingVerificationEmail = email;
+      showResendVerificationButton(true);
       setAuthMode("signin");
       return;
     }
 
     setAuthStatus("Account created. Redirecting to profile...");
+    showResendVerificationButton(false);
     window.location.href = "profile.html";
   }
 
@@ -354,6 +408,8 @@
       imdb_id: entry.imdb_id || null,
       title: entry.title || "Unknown",
       year: entry.year || "N/A",
+      poster: entry.poster || entry.poster_path || "",
+      media_type: entry.media_type || "movie",
       searched_at: new Date().toISOString()
     };
 
@@ -583,6 +639,9 @@
       if (facebookBtn) {
         facebookBtn.disabled = true;
       }
+      if (resendVerifyBtn) {
+        resendVerifyBtn.disabled = true;
+      }
       if (logoutBtn) {
         logoutBtn.classList.add("hidden");
       }
@@ -604,6 +663,17 @@
     if (loginBtn) {
       loginBtn.addEventListener("click", async () => {
         await signInWithGoogle();
+      });
+    }
+
+    if (resendVerifyBtn) {
+      resendVerifyBtn.addEventListener("click", async () => {
+        const emailToUse = pendingVerificationEmail || (authEmailInput ? authEmailInput.value.trim() : "");
+        resendVerifyBtn.disabled = true;
+        setAuthStatus("Sending verification email...");
+        const resendResult = await resendVerificationEmail(emailToUse);
+        resendVerifyBtn.disabled = false;
+        setAuthStatus(resendResult.message);
       });
     }
 

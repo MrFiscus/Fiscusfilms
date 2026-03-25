@@ -75,7 +75,10 @@
               <div class="profile-hero-main">
                 <img id="profile-avatar-preview" class="profile-hero-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile avatar">
                 <div class="profile-hero-info">
-                  <h1 id="profile-name-heading">Guest User</h1>
+                  <div class="profile-name-row">
+                    <h1 id="profile-name-heading">Guest User</h1>
+                    <button id="profile-logout-btn" class="auth-btn auth-btn-secondary profile-logout-btn hidden">Logout</button>
+                  </div>
                   <p class="profile-member-line">Member since <span id="profile-member-since">-</span></p>
                   <p id="profile-auth-status" class="profile-auth-status-line">Sign in to view your profile</p>
                 </div>
@@ -95,7 +98,6 @@
 
           <div class="profile-auth-actions">
             <button id="profile-login-btn" class="auth-btn">Sign in</button>
-            <button id="profile-logout-btn" class="auth-btn auth-btn-secondary profile-logout-btn hidden">Logout</button>
           </div>
 
           <section class="profile-rails-section">

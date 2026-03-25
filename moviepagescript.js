@@ -102,11 +102,14 @@ function loadMovieDetails() {
         movie.addEventListener('click', () => {
             const titleEl = movie.querySelector('.search-item-info h3');
             const yearEl = movie.querySelector('.search-item-info p');
+            const posterEl = movie.querySelector('.search-item-thumbnail img');
             if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
                 window.FiscusAuth.addSearchHistory({
                     tmdb_id: movie.dataset.id,
+                    media_type: movie.dataset.mediaType || 'movie',
                     title: titleEl ? titleEl.textContent : 'Unknown',
-                    year: yearEl ? yearEl.textContent : 'N/A'
+                    year: yearEl ? yearEl.textContent : 'N/A',
+                    poster: posterEl ? posterEl.src : ''
                 });
             }
 

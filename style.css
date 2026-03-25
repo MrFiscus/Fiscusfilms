@@ -643,6 +643,7 @@ padding-top: 2vh;
 }
 
 #upcoming-recomen-title,
+#toprated-movies-title,
 #popular-tv-title,
 #toprated-tv-title,
 #airing-tv-title {
@@ -710,6 +711,12 @@ padding-top: 2vh;
 
 }
 
+.home-rail-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
 .recon-poster {
 width: 100%;
 height: var(--list-card-height);
@@ -722,6 +729,74 @@ object-fit: cover;
 .movie-poster-box:hover .recon-poster {
 transform: scale(1.05) translateY(-4px);
 box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.home-rail-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 22%, rgba(0, 0, 0, 0.94) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.home-rail-card:hover .home-rail-overlay,
+.home-rail-card:focus-within .home-rail-overlay {
+  opacity: 1;
+}
+
+.home-rail-overlay h3 {
+  color: var(--white-color);
+  font-size: 0.86rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.home-rail-overlay p {
+  margin: 0;
+  color: rgba(235, 235, 234, 0.82);
+  font-size: 0.68rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.home-rail-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.home-rail-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(13, 27, 42, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.home-rail-icon-btn img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.home-rail-icon-btn:hover {
+  background: rgba(65, 90, 119, 0.95);
+}
+
+.home-rail-icon-btn[aria-pressed="true"] {
+  background: rgba(119, 141, 169, 0.95);
+  border-color: rgba(255, 255, 255, 0.75);
 }
 
 .slider-button {
@@ -759,6 +834,10 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
   left: 0px;
 }
 
+#toprated-movies-prev-slide {
+  left: 0px;
+}
+
 /* Position for next button */
 #recom-next-slide {
   right: 0px;
@@ -769,6 +848,10 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
 }
 
 #upcoming-next-slide {
+  right: 0px;
+}
+
+#toprated-movies-next-slide {
   right: 0px;
 }
 
@@ -1998,8 +2081,14 @@ font-weight: 700;
 
 .profile-hero-main {
   display: flex;
-  align-items: flex-end;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .profile-hero-avatar {
@@ -2118,6 +2207,11 @@ font-weight: 700;
   overflow: hidden;
 }
 
+.profile-rail-viewport.movie-recomen-moviesbox {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .profile-rail-list {
   display: flex;
   gap: 8px;
@@ -2130,6 +2224,71 @@ font-weight: 700;
 
 .profile-rail-card {
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-rail-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 20%, rgba(0, 0, 0, 0.92) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.profile-rail-card:hover .profile-rail-overlay,
+.profile-rail-card:focus-within .profile-rail-overlay {
+  opacity: 1;
+}
+
+.profile-rail-overlay h3 {
+  color: var(--white-color);
+  font-size: 14px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.profile-rail-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-rail-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(13, 27, 42, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.profile-rail-icon-btn img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.profile-rail-icon-btn:hover {
+  background: rgba(65, 90, 119, 0.95);
+}
+
+.profile-rail-icon-btn-remove {
+  background: rgba(224, 73, 73, 0.2);
+  border-color: rgba(224, 73, 73, 0.55);
+}
+
+.profile-rail-icon-btn-remove:hover {
+  background: rgba(224, 73, 73, 0.34);
 }
 
 #profile-favorites-prev,
@@ -2363,6 +2522,28 @@ font-weight: 700;
   margin: 12px 0 4px;
   color: #d2dbe5;
   font-size: 0.83rem;
+}
+
+.auth-resend-btn {
+  border: 1px solid rgba(119, 141, 169, 0.55);
+  border-radius: 8px;
+  background: rgba(13, 27, 42, 0.5);
+  color: #d7e3f0;
+  font-family: "Oswald", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 300;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin: 4px 0 8px;
+}
+
+.auth-resend-btn:hover {
+  background: rgba(27, 38, 59, 0.8);
+}
+
+.auth-resend-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .auth-divider {
@@ -2648,6 +2829,7 @@ font-weight: 700;
   #trending-recomen-title,
   #movie-recomen-title,
   #upcoming-recomen-title,
+  #toprated-movies-title,
   #series-recomen-title,
   #popular-tv-title,
   #toprated-tv-title,
