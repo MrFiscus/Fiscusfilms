@@ -150,6 +150,28 @@
               <input id="profile-email" type="email" placeholder="you@example.com">
             </div>
 
+            <div class="profile-field">
+              <label>Change Background Image</label>
+              <div class="profile-backdrop-controls">
+                <input 
+                  id="profile-backdrop-search" 
+                  type="text" 
+                  placeholder="Search movie..." 
+                  class="profile-backdrop-input"
+                >
+                <button id="profile-change-backdrop-btn" type="button" class="auth-btn">Change Poster</button>
+                <button id="profile-pick-random-btn" type="button" class="auth-btn icon-text-btn" title="Pick random poster">
+                  <img src="refresh-512.png" alt="Pick Random" class="icon-img">
+                  <span>Pick Random</span>
+                </button>
+                <button id="profile-upload-backdrop-btn" type="button" class="auth-btn icon-text-btn" title="Upload custom background">
+                  <img src="upload-512.png" alt="Upload" class="icon-img">
+                  <span>Upload</span>
+                </button>
+                <input id="profile-backdrop-file-input" type="file" accept="image/*" style="display: none;">
+              </div>
+            </div>
+
             <div class="profile-save-row">
               <button id="profile-save-btn" type="submit" class="auth-btn">Save Profile</button>
               <span id="profile-save-message" class="profile-save-message"></span>

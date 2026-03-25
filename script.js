@@ -556,6 +556,107 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.href = 'movies.html';
     }
 
+    async function loadFiscusPosterImages() {
+        const fiscusList = document.getElementById('popularfiscus');
+        if (!fiscusList) {
+            console.log('Fiscus list not found');
+            return;
+        }
+        
+        const movieItems = fiscusList.querySelectorAll('.movie-poster-box');
+        console.log(`Found ${movieItems.length} movie items in fiscus list`);
+        
+        const apiKey = getTmdbApiKey();
+        if (!apiKey) {
+            console.error('No TMDB API key found');
+            return;
+        }
+        
+        console.log('Starting to load fiscus poster images...');
+        
+        for (let i = 0; i < movieItems.length; i++) {
+            const item = movieItems[i];
+            const movieTitle = item.dataset.movieTitle;
+            const img = item.querySelector('.recon-poster');
+            
+            if (!img || !movieTitle) {
+                console.warn('Missing img or movieTitle', { movieTitle, hasImg: !!img });
+                continue;
+            }
+            
+            try {
+                const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieTitle)}&language=en-US`;
+                console.log(`[${i + 1}/${movieItems.length}] Fetching: ${movieTitle}`);
+                
+                const response = await fetch(searchUrl);
+                if (!response.ok) {
+                    console.error(`API error for ${movieTitle}: ${response.status}`);
+                    continue;
+                }
+                
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    const posterPath = data.results[0].poster_path;
+                    if (posterPath) {
+                        img.src = `https://image.tmdb.org/t/p/w500${posterPath}`;
+                        console.log(`✓ Loaded poster for ${movieTitle}`);
+                    } else {
+                        console.warn(`No poster path in result for ${movieTitle}`);
+                    }
+                } else {
+                    console.warn(`No results found for ${movieTitle}`);
+                }
+            } catch (error) {
+                console.error(`Failed to load poster for ${movieTitle}:`, error);
+            }
+            
+            // Add small delay between requests to avoid rate limiting
+            if (i < movieItems.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+        
+        console.log('Finished loading fiscus poster images');
+    }
+
+    async function searchAndNavigateToMovie(movieTitle) {
+        if (!movieTitle || !movieTitle.trim()) {
+            console.warn('No movie title provided');
+            return;
+        }
+
+        try {
+            const apiKey = getTmdbApiKey();
+            if (!apiKey) {
+                console.warn('TMDB API key not found');
+                return;
+            }
+
+            const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieTitle)}&language=en-US`;
+            const response = await fetch(searchUrl);
+            
+            if (!response.ok) {
+                console.warn('Failed to search for movie:', movieTitle);
+                return;
+            }
+
+            const data = await response.json();
+            const results = data.results || [];
+            
+            if (results.length === 0) {
+                console.warn('No results found for movie:', movieTitle);
+                return;
+            }
+
+            // Use the first result
+            const movie = results[0];
+            navigateToMovie(movie.id);
+        } catch (error) {
+            console.error('Error searching for movie:', error);
+        }
+    }
+
     // Fetch trending movies or use fallback
     let contentArray = await fetchTrendingMoviesForHomepage();
     
@@ -681,8 +782,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Expose navigation function to global scope for onclick handlers
     window.carouselNavigateToMovie = navigateToMovie;
+    window.searchAndNavigateToMovie = searchAndNavigateToMovie;
 
     updateSlide();
+    loadFiscusPosterImages();
 });
 
 

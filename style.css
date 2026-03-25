@@ -46,8 +46,6 @@ html {
   height: auto;
   display: flex;
   flex-direction: column;
-  background-image:  linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%),url(./images/500daysofsummer.avif);
-
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -720,6 +718,7 @@ padding-top: 2vh;
 .recon-poster {
 width: 100%;
 height: var(--list-card-height);
+background-color: #1a1a1a;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 transition: transform 0.25s ease, box-shadow 0.25s ease;
 transform-origin: center;
@@ -1287,6 +1286,11 @@ display: flex;
 
 #cast-next-slide {
   right: 0;
+}
+
+.cast-sliders-hidden #cast-prev-slide,
+.cast-sliders-hidden #cast-next-slide {
+  display: none;
 }
 
 .movie-cast-slider-container:hover .movie-page-slider-button-left,
@@ -1859,6 +1863,99 @@ font-weight: 700;
   background-color: var(--primary-color);
 }
 
+.icon-btn {
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-text-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.icon-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.main__action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.main__scroll {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.main__scroll:hover {
+  transform: translateY(5px);
+}
+
+.main__scroll-text {
+  color: rgba(235, 235, 234, 1);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: "Roboto", sans-serif;
+}
+
+.main__scroll-box {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(235, 235, 234, 1);
+}
+
+.main__scroll-box svg {
+  width: 100%;
+  height: 100%;
+}
+
+.main__action:hover .main__scroll-box {
+  animation: scroll-down 3s infinite;
+}
+
+@keyframes scroll-down {
+  0%, 100% {
+    transform: translateY(0rem);
+    opacity: 1;
+  }
+  35% {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(-1rem);
+    opacity: 0;
+  }
+}
+
 .watchlist-section {
   background-color: var(--primary-color);
   padding: 30px 60px 50px;
@@ -1999,9 +2096,12 @@ font-weight: 700;
   margin-top: -86px;
 }
 
-.profile-view .nav-bar,
+.profile-view .nav-bar {
+  background-color: transparent;
+}
+
 .profile-view .nav-bar.nav-colored {
-  background-color: transparent !important;
+  background-color: var(--dark-color);
 }
 
 .profile-dashboard-shell {
@@ -2030,35 +2130,13 @@ font-weight: 700;
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.72) 0%,
-      rgba(0, 0, 0, 0.38) 12%,
-      rgba(0, 0, 0, 0) 26%
-    ),
-    linear-gradient(
-      270deg,
-      rgba(0, 0, 0, 0.94) 0%,
-      rgba(0, 0, 0, 0.78) 16%,
-      rgba(0, 0, 0, 0.48) 34%,
-      rgba(0, 0, 0, 0.2) 50%,
-      rgba(0, 0, 0, 0) 66%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0) 52%,
-      rgba(0, 0, 0, 0.56) 76%,
-      rgba(0, 0, 0, 0.88) 92%,
-      rgba(10, 15, 24, 1) 100%
-    ),
-    linear-gradient(
-      94deg,
-      rgba(13, 27, 42, 0.86) 12%,
-      rgba(65, 90, 119, 0.46) 58%,
-      rgba(119, 141, 169, 0.34) 90%
-    ),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.08) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(27, 38, 59, 0.5) 0%,
+    rgba(13, 27, 42, 0.7) 40%,
+    rgba(10, 15, 24, 0.85) 70%,
+    rgb(10, 15, 24) 100%
+  );
 }
 
 .profile-image-surface > * {
@@ -2357,6 +2435,34 @@ font-weight: 700;
 
 .profile-field input:focus {
   border-color: rgba(177, 196, 216, 0.85);
+}
+
+.profile-backdrop-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.profile-backdrop-input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid rgba(119, 141, 169, 0.55);
+  border-radius: 10px;
+  background-color: rgba(13, 27, 42, 0.75);
+  color: var(--white-color);
+  padding: 0 12px;
+  outline: none;
+  font-family: "Oswald", sans-serif;
+  font-weight: 300;
+  font-size: 1rem;
+}
+
+.profile-backdrop-input:focus {
+  border-color: rgba(177, 196, 216, 0.85);
+}
+
+.profile-backdrop-input::placeholder {
+  color: rgba(235, 235, 234, 0.5);
 }
 
 .profile-preview-row {

@@ -21,6 +21,11 @@
   const avatarPreview = document.getElementById("profile-avatar-preview");
   const saveMessage = document.getElementById("profile-save-message");
   const saveBtn = document.getElementById("profile-save-btn");
+  const changeBackdropBtn = document.getElementById("profile-change-backdrop-btn");
+  const pickRandomBtn = document.getElementById("profile-pick-random-btn");
+  const uploadBackdropBtn = document.getElementById("profile-upload-backdrop-btn");
+  const backdropFileInput = document.getElementById("profile-backdrop-file-input");
+  const backdropSearchInput = document.getElementById("profile-backdrop-search");
   const profileImageSurface = document.querySelector(".profile-image-surface");
   const ACTION_ICONS = {
     watch: "play-512.png",
@@ -249,6 +254,133 @@
 
     profileImageSurface.style.backgroundImage = `url("${backdropUrl}")`;
     lastBackdropPath = backdropPath;
+    await saveBackdropToUserProfile(backdropUrl);
+  }
+
+  async function saveBackdropToUserProfile(backdropSource) {
+    if (!supabaseClient || !currentUser) {
+      return;
+    }
+
+    const updates = {
+      data: {
+        backdrop: backdropSource
+      }
+    };
+
+    const { error } = await supabaseClient.auth.updateUser(updates);
+    if (error) {
+      console.error("Failed to save backdrop:", error);
+    } else if (currentUser.user_metadata) {
+      currentUser.user_metadata.backdrop = backdropSource;
+    }
+  }
+
+  async function loadSavedBackdrop() {
+    if (!currentUser || !currentUser.user_metadata || !currentUser.user_metadata.backdrop) {
+      return false;
+    }
+
+    const backdrop = currentUser.user_metadata.backdrop;
+    
+    if (backdrop.startsWith("data:image")) {
+      // It's a data URL from custom upload
+      if (profileImageSurface) {
+        profileImageSurface.style.backgroundImage = `url("${backdrop}")`;
+        lastBackdropPath = backdrop;
+      }
+      return true;
+    } else if (backdrop.startsWith("http")) {
+      // It's a TMDB URL
+      if (profileImageSurface) {
+        profileImageSurface.style.backgroundImage = `url("${backdrop}")`;
+        lastBackdropPath = backdrop;
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  async function applyBackdropFromMovieSearch(movieQuery) {
+    if (!profileImageSurface || !movieQuery || movieQuery.trim().length === 0) {
+      return false;
+    }
+
+    const apiKey = getTmdbApiKey();
+    if (!apiKey) {
+      return false;
+    }
+
+    try {
+      // Search for the movie
+      const searchResponse = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieQuery)}&include_adult=false&page=1`);
+      if (!searchResponse.ok) {
+        return false;
+      }
+
+      const searchData = await searchResponse.json();
+      const movies = searchData.results || [];
+      
+      if (movies.length === 0) {
+        return false;
+      }
+
+      // Use the first result
+      const movie = movies[0];
+      if (!movie.backdrop_path) {
+        return false;
+      }
+
+      // Apply the backdrop
+      const backdropUrl = buildTmdbBackdropUrl(movie.backdrop_path, "w1280");
+      if (!backdropUrl) {
+        return false;
+      }
+
+      profileImageSurface.style.backgroundImage = `url("${backdropUrl}")`;
+      lastBackdropPath = movie.backdrop_path;
+      await saveBackdropToUserProfile(backdropUrl);
+      return true;
+    } catch (error) {
+      console.error("Error searching for movie backdrop:", error);
+      return false;
+    }
+  }
+
+  async function handleBackdropFileUpload(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      setSaveMessage("Please select a valid image file.", true);
+      return false;
+    }
+
+    // Limit file size to 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      setSaveMessage("Image must be smaller than 5MB.", true);
+      return false;
+    }
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const dataUrl = event.target.result;
+        if (profileImageSurface) {
+          profileImageSurface.style.backgroundImage = `url("${dataUrl}")`;
+          lastBackdropPath = dataUrl;
+          await saveBackdropToUserProfile(dataUrl);
+          setSaveMessage("Custom background uploaded successfully!", false);
+          resolve(true);
+        } else {
+          setSaveMessage("Could not apply background image.", true);
+          resolve(false);
+        }
+      };
+      reader.onerror = () => {
+        setSaveMessage("Failed to read image file.", true);
+        resolve(false);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   async function startProfileBackdropRotation() {
@@ -755,6 +887,7 @@
     }
 
     hydrateFormFromUser(currentUser);
+    await loadSavedBackdrop();
     await refreshCollections();
     setSaveMessage("", false);
   }
@@ -813,8 +946,92 @@
       return;
     }
 
+    // Add scroll event listener for navbar color transition
+    const navbar = document.getElementById('navbar');
+    if (navbar) {
+      const scrollHandler = () => {
+        if (window.scrollY > 40) {
+          navbar.classList.add('nav-colored');
+        } else {
+          navbar.classList.remove('nav-colored');
+        }
+      };
+      window.addEventListener('scroll', scrollHandler, { passive: true });
+      // Check initial scroll position in case page starts scrolled
+      scrollHandler();
+    }
+
+    // Add event listener for change backdrop button
+    if (changeBackdropBtn) {
+      changeBackdropBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        changeBackdropBtn.disabled = true;
+        changeBackdropBtn.textContent = "Changing...";
+        
+        const searchQuery = backdropSearchInput ? backdropSearchInput.value.trim() : "";
+        let success = false;
+
+        if (searchQuery) {
+          // Search for specific movie
+          success = await applyBackdropFromMovieSearch(searchQuery);
+          if (!success) {
+            setSaveMessage("Movie not found or has no backdrop.", true);
+          } else {
+            setSaveMessage("Backdrop updated successfully!", false);
+            if (backdropSearchInput) {
+              backdropSearchInput.value = "";
+            }
+          }
+        } else {
+          // Use random backdrop
+          await applyRandomProfileBackdrop();
+          success = true;
+        }
+
+        changeBackdropBtn.disabled = false;
+        changeBackdropBtn.textContent = "Change Poster";
+      });
+    }
+
+    // Add event listener for pick random button
+    if (pickRandomBtn) {
+      pickRandomBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        pickRandomBtn.disabled = true;
+        const spanEl = pickRandomBtn.querySelector('span');
+        if (spanEl) spanEl.textContent = "Picking...";
+        
+        await applyRandomProfileBackdrop();
+        setSaveMessage("Random backdrop applied!", false);
+        
+        pickRandomBtn.disabled = false;
+        if (spanEl) spanEl.textContent = "Pick Random";
+      });
+    }
+
+    // Add event listener for upload backdrop button
+    if (uploadBackdropBtn && backdropFileInput) {
+      uploadBackdropBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        backdropFileInput.click();
+      });
+
+      backdropFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          uploadBackdropBtn.disabled = true;
+          const spanEl = uploadBackdropBtn.querySelector('span');
+          if (spanEl) spanEl.textContent = "Uploading...";
+          await handleBackdropFileUpload(file);
+          uploadBackdropBtn.disabled = false;
+          if (spanEl) spanEl.textContent = "Upload";
+          // Reset file input
+          backdropFileInput.value = "";
+        }
+      });
+    }
+
     attachRailClickHandlers();
-    await startProfileBackdropRotation();
 
     if (!slidersInitialized) {
       initRailSlider("favorites", favoritesListEl);
