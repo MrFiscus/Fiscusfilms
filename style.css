@@ -3066,6 +3066,32 @@ font-weight: 700;
     grid-template-columns: 1fr;
   }
 
+  .profile-backdrop-controls {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .profile-backdrop-input {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .profile-backdrop-controls .auth-btn {
+    flex: 1;
+    min-width: calc(50% - 3px);
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+
+  .icon-text-btn span {
+    font-size: 0.8rem;
+  }
+
+  .profile-save-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
   .auth-status {
     font-size: 11px;
   }
@@ -3190,6 +3216,27 @@ font-weight: 700;
 
   .footer-logo {
     gap: 6px;
+  }
+
+  .profile-backdrop-controls {
+    flex-direction: column;
+  }
+
+  .profile-backdrop-controls .auth-btn {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .profile-editor-section {
+    padding: 12px;
+  }
+
+  .profile-field {
+    margin-bottom: 8px;
+  }
+
+  .profile-save-row {
+    gap: 8px;
   }
 }
 
