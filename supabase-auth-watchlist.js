@@ -4,6 +4,19 @@
   const statusEl = document.getElementById("auth-status");
   const loginBtn = document.getElementById("login-btn") || document.getElementById("profile-login-btn");
   const logoutBtn = document.getElementById("logout-btn") || document.getElementById("profile-logout-btn");
+  const authForm = document.getElementById("auth-form");
+  const authTitle = document.getElementById("auth-title");
+  const authTogglePrefix = document.getElementById("auth-toggle-prefix");
+  const authModeToggle = document.getElementById("auth-mode-toggle");
+  const authNameRow = document.getElementById("auth-name-row");
+  const firstNameInput = document.getElementById("auth-first-name");
+  const lastNameInput = document.getElementById("auth-last-name");
+  const authEmailInput = document.getElementById("auth-email");
+  const authPasswordInput = document.getElementById("auth-password");
+  const authTermsRow = document.getElementById("auth-terms-row");
+  const authTermsCheckbox = document.getElementById("auth-terms");
+  const authSubmitBtn = document.getElementById("auth-submit-btn");
+  const facebookBtn = document.getElementById("facebook-btn");
   const profileLink = document.getElementById("profile-link");
   const profileAvatar = profileLink ? profileLink.querySelector(".profile-avatar") : null;
   const watchlistGrid = document.getElementById("watchlist-grid");
@@ -13,6 +26,7 @@
 
   let supabaseClient = null;
   let currentUser = null;
+  let authMode = "signup";
 
   function isConfigured() {
     if (!window.SUPABASE_CONFIG || !window.supabase) {
@@ -59,6 +73,14 @@
     profileAvatar.classList.toggle("is-default", isDefault);
   }
 
+  function updateProfileLinkDestination(loggedIn) {
+    if (!profileLink) {
+      return;
+    }
+
+    profileLink.setAttribute("href", loggedIn ? "profile.html" : "login.html");
+  }
+
   function toggleAuthButtons(loggedIn) {
     if (!loginBtn || !logoutBtn) {
       return;
@@ -71,6 +93,173 @@
       loginBtn.classList.remove("hidden");
       logoutBtn.classList.add("hidden");
     }
+  }
+
+  function hasEmailAuthForm() {
+    return Boolean(authForm && authEmailInput && authPasswordInput && authSubmitBtn);
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode === "signin" ? "signin" : "signup";
+    if (!hasEmailAuthForm()) {
+      return;
+    }
+
+    const signingIn = authMode === "signin";
+
+    if (authTitle) {
+      authTitle.textContent = signingIn ? "Sign in" : "Create an account";
+    }
+    if (authTogglePrefix) {
+      authTogglePrefix.textContent = signingIn ? "Need an account?" : "Already have an account?";
+    }
+    if (authModeToggle) {
+      authModeToggle.textContent = signingIn ? "Create account" : "Log in";
+    }
+    if (authSubmitBtn) {
+      authSubmitBtn.textContent = signingIn ? "Sign in" : "Create account";
+    }
+
+    if (authNameRow) {
+      authNameRow.classList.toggle("hidden", signingIn);
+    }
+    if (authTermsRow) {
+      authTermsRow.classList.toggle("hidden", signingIn);
+    }
+
+    if (firstNameInput) {
+      firstNameInput.required = !signingIn;
+    }
+    if (lastNameInput) {
+      lastNameInput.required = !signingIn;
+    }
+    if (authTermsCheckbox) {
+      authTermsCheckbox.required = !signingIn;
+    }
+    if (authPasswordInput) {
+      authPasswordInput.setAttribute("autocomplete", signingIn ? "current-password" : "new-password");
+    }
+  }
+
+  async function signInWithEmailPassword(email, password) {
+    if (!supabaseClient) {
+      return { ok: false, message: "Auth is not configured." };
+    }
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      return { ok: false, message: error.message || "Could not sign in." };
+    }
+
+    return { ok: true, user: data.user };
+  }
+
+  async function signUpWithEmailPassword(payload) {
+    if (!supabaseClient) {
+      return { ok: false, message: "Auth is not configured." };
+    }
+
+    const fullName = `${payload.firstName} ${payload.lastName}`.trim();
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: payload.email,
+      password: payload.password,
+      options: {
+        data: {
+          first_name: payload.firstName,
+          last_name: payload.lastName,
+          full_name: fullName,
+          display_name: fullName
+        }
+      }
+    });
+
+    if (error) {
+      return { ok: false, message: error.message || "Could not create account." };
+    }
+
+    return {
+      ok: true,
+      needsEmailConfirm: !(data && data.session),
+      user: data ? data.user : null
+    };
+  }
+
+  async function handleEmailAuthSubmit(event) {
+    event.preventDefault();
+
+    if (!supabaseClient) {
+      setAuthStatus("Supabase is not configured.");
+      return;
+    }
+
+    const email = authEmailInput ? authEmailInput.value.trim() : "";
+    const password = authPasswordInput ? authPasswordInput.value : "";
+
+    if (!email || !password) {
+      setAuthStatus("Enter email and password.");
+      return;
+    }
+
+    if (authSubmitBtn) {
+      authSubmitBtn.disabled = true;
+    }
+
+    if (authMode === "signin") {
+      setAuthStatus("Signing in...");
+      const result = await signInWithEmailPassword(email, password);
+      if (authSubmitBtn) {
+        authSubmitBtn.disabled = false;
+      }
+
+      if (!result.ok) {
+        setAuthStatus(result.message);
+        return;
+      }
+
+      setAuthStatus("Signed in. Redirecting to profile...");
+      window.location.href = "profile.html";
+      return;
+    }
+
+    const firstName = firstNameInput ? firstNameInput.value.trim() : "";
+    const lastName = lastNameInput ? lastNameInput.value.trim() : "";
+
+    if (!firstName || !lastName) {
+      if (authSubmitBtn) {
+        authSubmitBtn.disabled = false;
+      }
+      setAuthStatus("Enter your first and last name.");
+      return;
+    }
+
+    if (authTermsCheckbox && !authTermsCheckbox.checked) {
+      if (authSubmitBtn) {
+        authSubmitBtn.disabled = false;
+      }
+      setAuthStatus("You must accept the terms to create an account.");
+      return;
+    }
+
+    setAuthStatus("Creating account...");
+    const result = await signUpWithEmailPassword({ firstName, lastName, email, password });
+
+    if (authSubmitBtn) {
+      authSubmitBtn.disabled = false;
+    }
+
+    if (!result.ok) {
+      setAuthStatus(result.message);
+      return;
+    }
+
+    if (result.needsEmailConfirm) {
+      setAuthStatus("Account created. Check your email to confirm and then sign in.");
+      setAuthMode("signin");
+      return;
+    }
+
+    setAuthStatus("Account created. Redirecting to profile...");
+    window.location.href = "profile.html";
   }
 
   function setLoading(isLoading) {
@@ -284,6 +473,19 @@
     });
   }
 
+  async function signInWithFacebook() {
+    if (!supabaseClient) {
+      return;
+    }
+
+    await supabaseClient.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        redirectTo: window.SUPABASE_CONFIG.redirectTo
+      }
+    });
+  }
+
   async function signOut() {
     if (!supabaseClient) {
       return;
@@ -348,6 +550,7 @@
 
     if (currentUser) {
       setAuthStatus(`Signed in as ${currentUser.email}`);
+      updateProfileLinkDestination(true);
       if (profileLink) {
         profileLink.setAttribute("title", `Signed in as ${currentUser.email}`);
       }
@@ -356,6 +559,7 @@
       await refreshWatchlist();
     } else {
       setAuthStatus("Not signed in");
+      updateProfileLinkDestination(false);
       if (profileLink) {
         profileLink.setAttribute("title", "Open profile");
       }
@@ -367,11 +571,17 @@
 
   async function init() {
     if (!isConfigured()) {
-      setAuthStatus("");
+      setAuthStatus("Supabase is not configured for authentication.");
+      updateProfileLinkDestination(false);
       updateProfileAvatar("");
       if (loginBtn) {
-        loginBtn.textContent = "Login";
         loginBtn.disabled = true;
+      }
+      if (authSubmitBtn) {
+        authSubmitBtn.disabled = true;
+      }
+      if (facebookBtn) {
+        facebookBtn.disabled = true;
       }
       if (logoutBtn) {
         logoutBtn.classList.add("hidden");
@@ -395,6 +605,25 @@
       loginBtn.addEventListener("click", async () => {
         await signInWithGoogle();
       });
+    }
+
+    if (facebookBtn) {
+      facebookBtn.addEventListener("click", async () => {
+        await signInWithFacebook();
+      });
+    }
+
+    if (hasEmailAuthForm()) {
+      setAuthMode("signup");
+      authForm.addEventListener("submit", handleEmailAuthSubmit);
+
+      if (authModeToggle) {
+        authModeToggle.addEventListener("click", (event) => {
+          event.preventDefault();
+          setAuthMode(authMode === "signup" ? "signin" : "signup");
+          setAuthStatus("");
+        });
+      }
     }
 
     if (logoutBtn) {

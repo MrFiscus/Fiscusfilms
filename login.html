@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FiscusFilms Login</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+  </style>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+  </style>
+  <link rel="icon" type="image/png" href="./image-removebg-preview (1).png">
+</head>
+<body class="login-view">
+  <div class="body-movie-poster">
+    <div class="nav-bar" id="navbar">
+      <div class="logo">
+        <img class="logo" src="./image-removebg-preview (1).png" alt="FiscusFilms logo">
+        <a href="index.html"><h1 class="title">FiscusFilms</h1></a>
+      </div>
+      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
+        <svg class="nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M3 6.5h18v2H3zm0 4.75h18v2H3zm0 4.75h18v2H3z"></path>
+        </svg>
+        <span class="sr-only">Menu</span>
+      </button>
+
+      <ul class="nav-bar-sub" id="nav-menu">
+        <button class="nav-bar-buttons">
+          <a class="nav-bar-subbuttons" href="index.html"><span class="nav-bar-text">Home</span></a>
+        </button>
+        <button class="nav-bar-buttons">
+          <a class="nav-bar-subbuttons" href="index.html#popularmovies"><span class="nav-bar-text">Movies</span></a>
+        </button>
+        <button class="nav-bar-buttons">
+          <a class="nav-bar-subbuttons" href="index.html#popularseries"><span class="nav-bar-text">Series</span></a>
+        </button>
+        <button class="nav-bar-buttons">
+          <a class="nav-bar-subbuttons" href="index.html#popularfiscus"><span class="nav-bar-text">List</span></a>
+        </button>
+        <button class="nav-bar-buttons">
+          <a class="nav-bar-subbuttons" href="index.html#watchlist"><span class="nav-bar-text">Watchlist</span></a>
+        </button>
+
+        <div class="container">
+          <input checked="" class="checkbox" type="checkbox">
+          <div class="mainbox">
+            <div class="iconContainer">
+              <svg viewBox="0 0 512 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="search_icon"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"></path></svg>
+            </div>
+            <input class="form-control search_input" placeholder="Enter Movie Title.." id="movie-search-box" onkeyup="findMovies()" onclick="findMovies()" type="text">
+          </div>
+          <div class="search-list" id="search-list"></div>
+        </div>
+
+        <div class="auth-controls">
+          <a id="profile-link" class="profile-link" href="login.html" aria-label="Open profile">
+            <img class="profile-avatar" src="./user.png" alt="Profile">
+          </a>
+        </div>
+      </ul>
+    </div>
+
+    <main class="login-page-main">
+      <section class="login-panel" id="auth-card">
+        <h1 id="auth-title">Create an account</h1>
+        <p class="login-toggle-line">
+          <span id="auth-toggle-prefix">Already have an account?</span>
+          <a id="auth-mode-toggle" href="#">Log in</a>
+        </p>
+
+        <form id="auth-form" class="auth-form" novalidate>
+          <div id="auth-name-row" class="auth-name-row">
+            <input id="auth-first-name" class="auth-input" type="text" placeholder="First name" autocomplete="given-name">
+            <input id="auth-last-name" class="auth-input" type="text" placeholder="Last name" autocomplete="family-name">
+          </div>
+
+          <input id="auth-email" class="auth-input auth-input-full" type="email" placeholder="Email" autocomplete="email" required>
+          <input id="auth-password" class="auth-input auth-input-full" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+
+          <label id="auth-terms-row" class="auth-terms-row" for="auth-terms">
+            <input id="auth-terms" type="checkbox">
+            <span>I agree to the <a href="#">Terms &amp; Conditions</a></span>
+          </label>
+
+          <button id="auth-submit-btn" type="submit" class="auth-submit-btn">Create account</button>
+        </form>
+
+        <div id="auth-status" class="auth-status"></div>
+
+        <div class="auth-divider"><span>Or register with</span></div>
+
+        <div class="auth-oauth-row">
+          <button id="login-btn" class="auth-oauth-btn" type="button">
+            <img class="auth-oauth-logo" width="48" height="48" src="https://img.icons8.com/color/48/google-logo.png" alt="google-logo">
+            <span>Google</span>
+          </button>
+          <button id="facebook-btn" class="auth-oauth-btn" type="button">
+            <img class="auth-oauth-logo" width="48" height="48" src="https://img.icons8.com/color/48/facebook-new.png" alt="facebook-new">
+            <span>Facebook</span>
+          </button>
+        </div>
+
+        <button id="logout-btn" class="auth-btn auth-btn-secondary hidden" type="button">Logout</button>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="tmdb-config.js"></script>
+    <script src="moviepagescript.js"></script>
+    <script src="supabase-auth-watchlist.js"></script>
+    <script src="navbar.js"></script>
+  </div>
+</body>
+</html>
