@@ -24,6 +24,12 @@
   const watchlistEmpty = document.getElementById("watchlist-empty");
   const watchlistLoading = document.getElementById("watchlist-loading");
   const SEARCH_HISTORY_LIMIT = 30;
+  const WATCHLIST_ACTION_ICONS = {
+    watch: "play-512.png",
+    watchlist: "plus-2-512.png",
+    favorite: "favorite-2-512.png",
+    remove: "trash-2-512.png"
+  };
 
   let supabaseClient = null;
   let currentUser = null;
@@ -89,6 +95,15 @@
     }
 
     profileLink.setAttribute("href", loggedIn ? "profile.html" : "login.html");
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
   }
 
   function toggleAuthButtons(loggedIn) {
@@ -452,6 +467,118 @@
     window.location.href = "movies.html";
   }
 
+  function buildWatchlistMoviePayload(cardEl) {
+    if (!cardEl) {
+      return null;
+    }
+
+    const posterEl = cardEl.querySelector(".recon-poster");
+    return {
+      imdb_id: cardEl.dataset.imdbId || "",
+      tmdb_id: cardEl.dataset.tmdbId || "",
+      title: cardEl.dataset.movieTitle || "Untitled",
+      year: cardEl.dataset.movieYear || "",
+      poster: posterEl ? posterEl.src : "",
+      type: cardEl.dataset.movieType || "movie"
+    };
+  }
+
+  async function handleWatchlistGridAction(actionBtn) {
+    if (!actionBtn) {
+      return;
+    }
+
+    const cardEl = actionBtn.closest(".watchlist-card");
+    if (!cardEl) {
+      return;
+    }
+
+    const action = actionBtn.dataset.action || "";
+    const imdbId = cardEl.dataset.imdbId || "";
+
+    if (action === "watch") {
+      if (imdbId) {
+        openMovieDetails(imdbId);
+      }
+      return;
+    }
+
+    if (action === "remove") {
+      if (imdbId) {
+        await removeMovieFromWatchlist(imdbId);
+      }
+      return;
+    }
+
+    if (action === "watchlist") {
+      const payload = buildWatchlistMoviePayload(cardEl);
+      if (!payload || !payload.imdb_id) {
+        setAuthStatus("Could not add this title to watchlist.");
+        return;
+      }
+
+      const result = await addMovieToWatchlist(payload);
+      if (result && result.message) {
+        setAuthStatus(result.message);
+      }
+      return;
+    }
+
+    if (action === "favorite") {
+      const payload = buildWatchlistMoviePayload(cardEl);
+      if (!payload || !payload.imdb_id) {
+        setAuthStatus("Could not update favorites for this title.");
+        return;
+      }
+
+      const result = toggleFavoriteMovie(payload);
+      if (result && result.ok) {
+        actionBtn.setAttribute("aria-pressed", result.liked ? "true" : "false");
+      }
+      if (result && result.message) {
+        setAuthStatus(result.message);
+      }
+    }
+  }
+
+  async function fetchRandomMovies() {
+    try {
+      let apiKey = null;
+      if (window.TMDB_CONFIG && window.TMDB_CONFIG.apiKey && !window.TMDB_CONFIG.apiKey.includes("YOUR_TMDB_API_KEY")) {
+        apiKey = window.TMDB_CONFIG.apiKey;
+      }
+      
+      if (!apiKey) {
+        console.warn("TMDB API key not found for random movies preview");
+        return [];
+      }
+
+      const randomPage = Math.floor(Math.random() * 50) + 1;
+      const response = await fetch(
+        `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${randomPage}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
+      
+      return data.results.slice(0, 12).map(movie => ({
+        id: movie.id,
+        tmdb_id: movie.id,
+        title: movie.title,
+        year: movie.release_date ? movie.release_date.split('-')[0] : 'Unknown',
+        poster: movie.poster_path ? `${TMDB_IMAGE_BASE}${movie.poster_path}` : "https://via.placeholder.com/300x450?text=No+Poster",
+        type: 'movie'
+      }));
+    } catch (error) {
+      console.error("Failed to fetch random movies:", error);
+      return [];
+    }
+  }
+
   function renderWatchlistItems(items) {
     if (!watchlistGrid || !watchlistEmpty) {
       return;
@@ -459,9 +586,60 @@
 
     watchlistGrid.innerHTML = "";
 
+    const existingOverlay = watchlistGrid.parentElement
+      ? watchlistGrid.parentElement.querySelector(".watchlist-center-message")
+      : null;
+    if (existingOverlay) {
+      existingOverlay.remove();
+    }
+
     if (!currentUser) {
-      watchlistEmpty.textContent = "Sign in to view your watchlist.";
-      watchlistEmpty.classList.remove("hidden");
+      watchlistEmpty.classList.add("hidden");
+      
+      // Fetch and render random movies with blur overlay
+      fetchRandomMovies().then(randomMovies => {
+        if (randomMovies.length === 0) {
+          watchlistEmpty.textContent = "Log in to add movies to your watchlist.";
+          watchlistEmpty.classList.remove("hidden");
+          return;
+        }
+
+        randomMovies.forEach((movie) => {
+          const card = document.createElement("li");
+          card.className = "movie-poster-box watchlist-card watchlist-card-preview";
+          card.style.cursor = "pointer";
+
+          const poster = movie.poster && movie.poster !== "N/A" ? movie.poster : "https://via.placeholder.com/300x450?text=No+Poster";
+
+          card.innerHTML = `
+            <img class="recon-poster" src="${poster}" alt="${movie.title}">
+            <div class="watchlist-card-blur-overlay"></div>
+          `;
+
+          // Redirect to login page when clicked
+          card.addEventListener("click", () => {
+            window.location.href = "login.html";
+          });
+
+          watchlistGrid.appendChild(card);
+        });
+
+        // Add centered message overlay to the viewport container
+        const viewportContainer = watchlistGrid.parentElement;
+        const messageOverlay = document.createElement("div");
+        messageOverlay.className = "watchlist-center-message";
+        messageOverlay.style.cursor = "pointer";
+        messageOverlay.innerHTML = `
+          <h4>Sign in to start building your personalized watchlist</h4>
+        `;
+        
+        // Redirect to login page when message is clicked
+        messageOverlay.addEventListener("click", () => {
+          window.location.href = "login.html";
+        });
+        
+        viewportContainer.appendChild(messageOverlay);
+      });
       return;
     }
 
@@ -474,19 +652,43 @@
     watchlistEmpty.classList.add("hidden");
 
     items.forEach((movie) => {
-      const card = document.createElement("article");
-      card.className = "watchlist-card";
+      const card = document.createElement("li");
+      card.className = "movie-poster-box watchlist-card";
+      card.dataset.imdbId = movie.imdb_id || "";
+      card.dataset.tmdbId = movie.tmdb_id || "";
+      card.dataset.movieTitle = movie.title || "Untitled";
+      card.dataset.movieYear = movie.year || "";
+      card.dataset.movieType = movie.type || "movie";
 
       const poster = movie.poster && movie.poster !== "N/A" ? movie.poster : "https://via.placeholder.com/300x450?text=No+Poster";
+      const safePoster = escapeHtml(poster);
+      const safeTitle = escapeHtml(movie.title || "Untitled");
+      const safeYear = escapeHtml(movie.year || "Unknown Year");
+      const safeType = escapeHtml((movie.type || "movie").toUpperCase());
+      const isLiked = isFavoriteMovie(movie.imdb_id);
+      const watchIcon = escapeHtml(WATCHLIST_ACTION_ICONS.watch);
+      const watchlistIcon = escapeHtml(WATCHLIST_ACTION_ICONS.watchlist);
+      const favoriteIcon = escapeHtml(WATCHLIST_ACTION_ICONS.favorite);
+      const removeIcon = escapeHtml(WATCHLIST_ACTION_ICONS.remove);
 
       card.innerHTML = `
-        <img class="watchlist-card-image" src="${poster}" alt="${movie.title}">
+        <img class="recon-poster" src="${safePoster}" alt="${safeTitle}">
         <div class="watchlist-card-overlay">
-          <h3>${movie.title}</h3>
-          <p>${movie.year || "Unknown Year"} • ${(movie.type || "movie").toUpperCase()}</p>
-          <div class="watchlist-card-actions">
-            <button class="watchlist-card-btn" data-open="${movie.imdb_id}">Watch Now</button>
-            <button class="watchlist-card-btn watchlist-card-btn-remove" data-remove="${movie.imdb_id}">Remove</button>
+          <h3>${safeTitle}</h3>
+          <p>${safeYear} • ${safeType}</p>
+          <div class="profile-rail-actions">
+            <button class="profile-rail-icon-btn" type="button" data-action="watch" aria-label="Play now" title="Play now">
+              <img src="${watchIcon}" alt="" loading="lazy">
+            </button>
+            <button class="profile-rail-icon-btn" type="button" data-action="watchlist" aria-label="Add to watchlist" title="Add to watchlist" aria-pressed="true">
+              <img src="${watchlistIcon}" alt="" loading="lazy">
+            </button>
+            <button class="profile-rail-icon-btn" type="button" data-action="favorite" aria-label="Add to favorite" title="Add to favorite" aria-pressed="${isLiked ? "true" : "false"}">
+              <img src="${favoriteIcon}" alt="" loading="lazy">
+            </button>
+            <button class="profile-rail-icon-btn profile-rail-icon-btn-remove" type="button" data-action="remove" aria-label="Delete from list" title="Delete from list">
+              <img src="${removeIcon}" alt="" loading="lazy">
+            </button>
           </div>
         </div>
       `;
@@ -494,15 +696,20 @@
       watchlistGrid.appendChild(card);
     });
 
-    watchlistGrid.querySelectorAll("[data-open]").forEach((btn) => {
-      btn.addEventListener("click", () => openMovieDetails(btn.dataset.open));
-    });
+    if (watchlistGrid.dataset.actionsBound !== "true") {
+      watchlistGrid.addEventListener("click", async (event) => {
+        const actionBtn = event.target.closest("[data-action]");
+        if (!actionBtn) {
+          return;
+        }
 
-    watchlistGrid.querySelectorAll("[data-remove]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        await removeMovieFromWatchlist(btn.dataset.remove);
+        event.preventDefault();
+        event.stopPropagation();
+        await handleWatchlistGridAction(actionBtn);
       });
-    });
+
+      watchlistGrid.dataset.actionsBound = "true";
+    }
   }
 
   async function refreshWatchlist() {
@@ -514,6 +721,15 @@
     const items = await fetchWatchlist();
     setLoading(false);
     renderWatchlistItems(items);
+    
+    // Initialize slider for watchlist carousel
+    if (window.initializeHorizontalSlider) {
+      setTimeout(() => {
+        window.initializeHorizontalSlider("#watchlist-grid", "watchlist-next-slide", "watchlist-prev-slide", {
+          enableGestures: false
+        });
+      }, 0);
+    }
   }
 
   async function signInWithGoogle() {
@@ -548,6 +764,7 @@
     }
 
     await supabaseClient.auth.signOut();
+    window.location.href = "index.html";
   }
 
   async function addMovieToWatchlist(movie) {

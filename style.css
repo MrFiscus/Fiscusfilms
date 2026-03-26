@@ -854,6 +854,15 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
   right: 0px;
 }
 
+/* Watchlist slider buttons */
+#watchlist-prev-slide {
+  left: 0px;
+}
+
+#watchlist-next-slide {
+  right: 0px;
+}
+
 /* Optional: Customize pagination bullets */
 .swiper-pagination-bullet {
   background: #ffffff00;
@@ -1751,6 +1760,8 @@ border: 1px solid white;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .footer-logo {
@@ -1891,30 +1902,52 @@ border: 1px solid white;
 
   .footer-content {
     flex-direction: column;
-    gap: 32px;
-    margin-bottom: 32px;
+    gap: 0;
+    margin-bottom: 24px;
+    text-align: center;
   }
 
   .footer-branding {
     flex: none;
+    margin: 0 auto;
+  }
+
+  .footer-logo-section {
+    justify-content: center;
+  }
+
+  .footer-description {
+    max-width: 300px;
+    margin: 0 auto 12px auto;
   }
 
   .footer-sections {
-    gap: 32px;
+    display: none;
   }
 
-  .footer-section {
-    flex: 1;
+  .footer-divider {
+    display: none;
   }
 
   .footer-bottom {
     flex-direction: column;
     gap: 16px;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+    padding-top: 16px;
+  }
+
+  .footer-copyright {
+    order: 1;
+  }
+
+  .footer-tmdb-credit {
+    order: 2;
+    justify-content: center;
   }
 
   .footer-social {
-    order: -1;
+    order: 3;
   }
 }
 
@@ -1923,37 +1956,38 @@ border: 1px solid white;
     padding: 24px 12px;
   }
 
-  .footer-content {
-    gap: 24px;
-    margin-bottom: 24px;
-  }
-
   .footer-logo-section {
     margin-bottom: 12px;
+    justify-content: center;
+  }
+
+  .footer-logo-section .title {
+    font-size: 20px;
   }
 
   .footer-description {
     font-size: 12px;
-  }
-
-  .footer-sections {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .footer-section-title {
-    font-size: 14px;
-    margin-bottom: 12px;
-  }
-
-  .footer-section a {
-    font-size: 12px;
+    line-height: 1.5;
+    max-width: 280px;
+    margin: 0 auto 12px auto;
   }
 
   .footer-bottom {
-    flex-direction: column;
     gap: 12px;
-    align-items: flex-start;
+    padding-top: 12px;
+  }
+
+  .footer-copyright {
+    font-size: 12px;
+  }
+
+  .footer-tmdb-credit {
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .tmdb-logo {
+    height: 8px;
   }
 
   .footer-social {
@@ -2143,15 +2177,14 @@ border: 1px solid white;
 
 .watchlist-section {
   background-color: var(--primary-color);
-  padding: 30px 60px 50px;
+  width: 100%;
 }
 
 .watchlist-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  margin-bottom: 16px;
+  padding-left: var(--slider-side-space);
+  padding-right: var(--slider-side-space);
+  padding-top: 20px;
+  padding-bottom: 0;
 }
 
 #watchlist-title {
@@ -2160,45 +2193,109 @@ border: 1px solid white;
   font-weight: 300;
   font-size: 25px;
   margin: 0;
+  padding-bottom: 10px;
+  z-index: 1;
+  position: relative;
 }
 
 .watchlist-subtitle {
   color: #c9c9c9;
   font-size: 14px;
+  margin: 0;
 }
 
 .watchlist-message {
   color: #c9c9c9;
   margin-bottom: 10px;
+  padding: 0 var(--slider-side-space);
+}
+
+.watchlist-section .slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.watchlist-section .movie-recomen-moviesbox {
+  width: 100vw;
+  height: calc(var(--list-card-height) + 2vh);
+  margin: 0 calc(-50vw + 50%);
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  padding-left: 8px;
 }
 
 .watchlist-grid {
   display: flex;
-  flex-wrap: wrap;
+  transition: transform 0.5s ease;
+  list-style: none;
   gap: 8px;
-}
-
-.watchlist-card {
-  flex: 0 0 var(--list-card-width);
-  width: var(--list-card-width);
+  margin: 0;
+  padding: 0 var(--slider-side-space);
   position: relative;
-  border-radius: 0;
+}
+
+.watchlist-card-preview .recon-poster {
+  filter: blur(4px) brightness(0.35);
+}
+
+.watchlist-center-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  text-align: center;
+  padding: 10px;
+  pointer-events: none;
+  background: rgba(43, 43, 43, 0.053);
+  border-radius: 20px;
+}
+
+.watchlist-center-message h4 {
+  color: rgb(208, 207, 207);
+  font-family: "Oswald", sans-serif;
+  font-weight: 300;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  margin: 0;
+  line-height: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
+
+.watchlist-card-blur-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(65, 90, 119, 0.5);
+  z-index: 10;
+}
+
+.watchlist-preview-message {
+  text-align: center;
+  padding: 20px;
+  max-width: 90%;
+}
+
+.watchlist-preview-message h4 {
+  color: var(--white-color);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.movie-poster-box.watchlist-card {
+  position: relative;
   overflow: hidden;
-  background-color: transparent;
-}
-
-.watchlist-card-image {
-  width: 100%;
   height: var(--list-card-height);
-  object-fit: cover;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.watchlist-card:hover .watchlist-card-image,
-.watchlist-card:focus-within .watchlist-card-image {
-  transform: scale(1.05) translateY(-4px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
 }
 
 .watchlist-card-overlay {
@@ -2214,8 +2311,8 @@ border: 1px solid white;
   transition: opacity 0.2s ease;
 }
 
-.watchlist-card:hover .watchlist-card-overlay,
-.watchlist-card:focus-within .watchlist-card-overlay {
+.movie-poster-box.watchlist-card:hover .watchlist-card-overlay,
+.movie-poster-box.watchlist-card:focus-within .watchlist-card-overlay {
   opacity: 1;
 }
 
@@ -2943,6 +3040,7 @@ border: 1px solid white;
     gap: 12px 16px;
     padding: 0 14px;
   }
+
 }
 
 @media (max-width: 900px) {
@@ -3135,6 +3233,23 @@ border: 1px solid white;
     padding-left: 0;
   }
 
+  .watchlist-header-row {
+    padding-left: var(--slider-side-space);
+    padding-right: var(--slider-side-space);
+  }
+
+  .watchlist-message {
+    padding: 0 var(--slider-side-space);
+  }
+
+  .watchlist-section .movie-recomen-moviesbox {
+    padding: 0;
+  }
+
+  .watchlist-grid {
+    padding: 0 var(--slider-side-space);
+  }
+
   .movie-recomen-moviesbox,
   .series-recomen-seriesbox,
   .fiscus-recomen-seriesbox {
@@ -3193,10 +3308,6 @@ border: 1px solid white;
     max-width: 420px;
     padding: 6px 10px 0;
     box-sizing: border-box;
-  }
-
-  .watchlist-section {
-    padding: 24px 20px 40px;
   }
 
   .watchlist-grid {
@@ -3386,6 +3497,23 @@ border: 1px solid white;
   .movie-recomen-moviesbox,
   .series-recomen-seriesbox,
   .fiscus-recomen-seriesbox {
+    padding: 0 var(--slider-side-space);
+  }
+
+  .watchlist-section .movie-recomen-moviesbox {
+    padding: 0;
+  }
+
+  .watchlist-header-row {
+    padding-left: var(--slider-side-space);
+    padding-right: var(--slider-side-space);
+  }
+
+  .watchlist-message {
+    padding: 0 var(--slider-side-space);
+  }
+
+  .watchlist-grid {
     padding: 0 var(--slider-side-space);
   }
 

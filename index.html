@@ -276,11 +276,17 @@
 <div class="watchlist-section" id="watchlist">
     <div class="watchlist-header-row">
         <h1 id="watchlist-title">My Watchlist</h1>
-        <p class="watchlist-subtitle">Sign in to add movies to your watchlist.</p>
+    
     </div>
     <div id="watchlist-loading" class="watchlist-message hidden">Loading your watchlist...</div>
     <div id="watchlist-empty" class="watchlist-message">No movies in your watchlist yet.</div>
-    <div id="watchlist-grid" class="watchlist-grid"></div>
+    <div class="slider-container">
+        <button id="watchlist-prev-slide" class="slider-button">&#10094;</button> 
+        <div class="movie-recomen-moviesbox">
+            <ul class="movie-list watchlist-grid" id="watchlist-grid"></ul>
+        </div>
+        <button id="watchlist-next-slide" class="slider-button">&#10095;</button> 
+    </div>
 </div>
 
 <footer class="footer">

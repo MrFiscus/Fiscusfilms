@@ -600,6 +600,11 @@
       return;
     }
 
+    if (!window.FiscusAuth.isAuthenticated || !window.FiscusAuth.isAuthenticated()) {
+      window.location.href = "login.html";
+      return;
+    }
+
     const movie = buildMovieFromCard(cardEl);
     if (!movie.imdb_id) {
       setSaveMessage("Cannot add to watchlist for this title (missing IMDB id).", true);
@@ -615,6 +620,11 @@
 
   async function addCardToFavorites(cardEl) {
     if (!window.FiscusAuth || !window.FiscusAuth.toggleFavoriteMovie) {
+      return;
+    }
+
+    if (!window.FiscusAuth.isAuthenticated || !window.FiscusAuth.isAuthenticated()) {
+      window.location.href = "login.html";
       return;
     }
 

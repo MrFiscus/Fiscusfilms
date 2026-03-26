@@ -380,6 +380,11 @@
                             return;
                         }
 
+                        if (!window.FiscusAuth.isAuthenticated || !window.FiscusAuth.isAuthenticated()) {
+                            window.location.href = 'login.html';
+                            return;
+                        }
+
                         const result = await window.FiscusAuth.addMovieToWatchlist({
                             imdb_id: watchlistKey,
                             title: displayTitle,
@@ -405,7 +410,7 @@
                         }
 
                         if (!window.FiscusAuth.isAuthenticated()) {
-                            actionMessage.textContent = 'Please sign in first.';
+                            window.location.href = 'login.html';
                             return;
                         }
 
@@ -529,6 +534,106 @@
                         recommendedMoviesEmpty.classList.remove('hidden');
                     } else {
                         recommendedMoviesEmpty.classList.add('hidden');
+                    }
+
+                    if (recommendedMoviesList.dataset.actionsBound !== 'true') {
+                        recommendedMoviesList.addEventListener('click', async (event) => {
+                            const actionBtn = event.target.closest('[data-action]');
+                            if (!actionBtn) {
+                                return;
+                            }
+
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            const cardEl = actionBtn.closest('.home-rail-card');
+                            if (!cardEl) {
+                                return;
+                            }
+
+                            const action = actionBtn.dataset.action;
+                            if (action === 'watch') {
+                                const link = cardEl.querySelector('.recommended-item-link');
+                                if (link) {
+                                    link.click();
+                                }
+                                return;
+                            }
+
+                            const isLoggedIn = Boolean(
+                                window.FiscusAuth
+                                && window.FiscusAuth.isAuthenticated
+                                && window.FiscusAuth.isAuthenticated()
+                            );
+
+                            if (!isLoggedIn) {
+                                window.location.href = 'login.html';
+                                return;
+                            }
+
+                            const cardLink = cardEl.querySelector('.recommended-item-link');
+                            const recId = cardLink ? cardLink.dataset.id : '';
+                            const recMediaType = cardLink ? (cardLink.dataset.mediaType || 'movie') : 'movie';
+                            const recTitleEl = cardEl.querySelector('.home-rail-overlay h3');
+                            const recTitle = recTitleEl ? recTitleEl.textContent.replace(/\s*\(\d{4}\)\s*$/, '') : 'Untitled';
+                            const recPosterEl = cardEl.querySelector('.recon-poster');
+                            const recPoster = recPosterEl ? recPosterEl.src : '';
+
+                            const resolveImdbId = async (tmdbId, mediaType) => {
+                                if (!tmdbId) {
+                                    return '';
+                                }
+
+                                const apiKey = window.TMDB_CONFIG && window.TMDB_CONFIG.apiKey;
+                                if (!apiKey || apiKey.includes('YOUR_TMDB_API_KEY')) {
+                                    return '';
+                                }
+
+                                const endpoint = mediaType === 'tv'
+                                    ? `https://api.themoviedb.org/3/tv/${tmdbId}/external_ids?api_key=${apiKey}`
+                                    : `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${apiKey}`;
+
+                                try {
+                                    const response = await fetch(endpoint);
+                                    if (!response.ok) {
+                                        return '';
+                                    }
+                                    const data = await response.json();
+                                    return data && data.imdb_id ? String(data.imdb_id) : '';
+                                } catch (_) {
+                                    return '';
+                                }
+                            };
+
+                            const imdbId = await resolveImdbId(recId, recMediaType);
+                            if (!imdbId) {
+                                return;
+                            }
+
+                            const payload = {
+                                imdb_id: imdbId,
+                                tmdb_id: recId,
+                                title: recTitle,
+                                year: 'N/A',
+                                poster: recPoster,
+                                type: recMediaType
+                            };
+
+                            if (action === 'watchlist' && window.FiscusAuth.addMovieToWatchlist) {
+                                await window.FiscusAuth.addMovieToWatchlist(payload);
+                                actionBtn.setAttribute('aria-pressed', 'true');
+                                return;
+                            }
+
+                            if (action === 'favorite' && window.FiscusAuth.toggleFavoriteMovie) {
+                                const result = window.FiscusAuth.toggleFavoriteMovie(payload);
+                                if (result && result.ok) {
+                                    actionBtn.setAttribute('aria-pressed', result.liked ? 'true' : 'false');
+                                }
+                            }
+                        });
+
+                        recommendedMoviesList.dataset.actionsBound = 'true';
                     }
 
                     recommendedMoviesList.querySelectorAll('.recommended-item-link').forEach((link) => {

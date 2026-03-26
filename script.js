@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadHomeMovieRails();
 });
 
-function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId) {
+function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId, options = {}) {
     const movieList = document.querySelector(listSelector);
     const nextSlide = document.getElementById(nextButtonId);
     const prevSlide = document.getElementById(prevButtonId);
@@ -38,6 +38,7 @@ function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId) {
 
     const SWIPE_THRESHOLD = 35;
     const GESTURE_COOLDOWN_MS = 180;
+    const enableGestures = options.enableGestures !== false;
 
     function getSliderMetrics() {
         const firstItem = movieList.querySelector(".movie-poster-box");
@@ -112,58 +113,60 @@ function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId) {
         goPrev();
     });
 
-    sliderViewport.addEventListener("touchstart", (event) => {
-        if (!event.touches || !event.touches.length) {
-            return;
-        }
+    if (enableGestures) {
+        sliderViewport.addEventListener("touchstart", (event) => {
+            if (!event.touches || !event.touches.length) {
+                return;
+            }
 
-        touchStartX = event.touches[0].clientX;
-        touchStartY = event.touches[0].clientY;
-    }, { passive: true });
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        }, { passive: true });
 
-    sliderViewport.addEventListener("touchend", (event) => {
-        if (!event.changedTouches || !event.changedTouches.length) {
-            return;
-        }
+        sliderViewport.addEventListener("touchend", (event) => {
+            if (!event.changedTouches || !event.changedTouches.length) {
+                return;
+            }
 
-        const deltaX = event.changedTouches[0].clientX - touchStartX;
-        const deltaY = event.changedTouches[0].clientY - touchStartY;
+            const deltaX = event.changedTouches[0].clientX - touchStartX;
+            const deltaY = event.changedTouches[0].clientY - touchStartY;
 
-        if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) {
-            return;
-        }
+            if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) {
+                return;
+            }
 
-        if (!canHandleGesture()) {
-            return;
-        }
+            if (!canHandleGesture()) {
+                return;
+            }
 
-        if (deltaX < 0) {
-            goNext();
-        } else {
-            goPrev();
-        }
-    }, { passive: true });
+            if (deltaX < 0) {
+                goNext();
+            } else {
+                goPrev();
+            }
+        }, { passive: true });
 
-    sliderViewport.addEventListener("wheel", (event) => {
-        const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY)
-            ? event.deltaX
-            : (event.shiftKey ? event.deltaY : 0);
+        sliderViewport.addEventListener("wheel", (event) => {
+            const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+                ? event.deltaX
+                : (event.shiftKey ? event.deltaY : 0);
 
-        if (Math.abs(horizontalIntent) < 20) {
-            return;
-        }
+            if (Math.abs(horizontalIntent) < 20) {
+                return;
+            }
 
-        if (!canHandleGesture()) {
-            return;
-        }
+            if (!canHandleGesture()) {
+                return;
+            }
 
-        event.preventDefault();
-        if (horizontalIntent > 0) {
-            goNext();
-        } else {
-            goPrev();
-        }
-    }, { passive: false });
+            event.preventDefault();
+            if (horizontalIntent > 0) {
+                goNext();
+            } else {
+                goPrev();
+            }
+        }, { passive: false });
+    }
 
     window.addEventListener("resize", applyTransform);
 }
@@ -339,6 +342,19 @@ async function resolveImdbId(tmdbId, mediaType) {
 async function handleHomeRailAction(cardEl, action) {
     if (!cardEl || !action) {
         return;
+    }
+
+    if ((action === "watchlist" || action === "favorite")) {
+        const isLoggedIn = Boolean(
+            window.FiscusAuth
+            && typeof window.FiscusAuth.isAuthenticated === "function"
+            && window.FiscusAuth.isAuthenticated()
+        );
+
+        if (!isLoggedIn) {
+            window.location.href = "login.html";
+            return;
+        }
     }
 
     if (action === "watch") {
@@ -562,62 +578,114 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.log('Fiscus list not found');
             return;
         }
-        
+
         const movieItems = fiscusList.querySelectorAll('.movie-poster-box');
-        console.log(`Found ${movieItems.length} movie items in fiscus list`);
-        
         const apiKey = getTmdbApiKey();
         if (!apiKey) {
             console.error('No TMDB API key found');
             return;
         }
-        
-        console.log('Starting to load fiscus poster images...');
-        
+
+        const safePlayIcon = escapeHtml(HOME_ACTION_ICONS.watch);
+        const safeWatchlistIcon = escapeHtml(HOME_ACTION_ICONS.watchlist);
+        const safeFavoriteIcon = escapeHtml(HOME_ACTION_ICONS.favorite);
+
         for (let i = 0; i < movieItems.length; i++) {
             const item = movieItems[i];
             const movieTitle = item.dataset.movieTitle;
-            const img = item.querySelector('.recon-poster');
-            
-            if (!img || !movieTitle) {
-                console.warn('Missing img or movieTitle', { movieTitle, hasImg: !!img });
+            if (!movieTitle) {
                 continue;
             }
-            
+
+            let matchedMovie = null;
             try {
                 const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieTitle)}&language=en-US`;
-                console.log(`[${i + 1}/${movieItems.length}] Fetching: ${movieTitle}`);
-                
                 const response = await fetch(searchUrl);
-                if (!response.ok) {
-                    console.error(`API error for ${movieTitle}: ${response.status}`);
-                    continue;
-                }
-                
-                const data = await response.json();
-                
-                if (data.results && data.results.length > 0) {
-                    const posterPath = data.results[0].poster_path;
-                    if (posterPath) {
-                        img.src = `https://image.tmdb.org/t/p/w500${posterPath}`;
-                        console.log(`✓ Loaded poster for ${movieTitle}`);
-                    } else {
-                        console.warn(`No poster path in result for ${movieTitle}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        matchedMovie = data.results[0];
                     }
-                } else {
-                    console.warn(`No results found for ${movieTitle}`);
                 }
             } catch (error) {
                 console.error(`Failed to load poster for ${movieTitle}:`, error);
             }
-            
-            // Add small delay between requests to avoid rate limiting
+
+            const posterPath = matchedMovie && matchedMovie.poster_path
+                ? `${TMDB_IMAGE_BASE}${matchedMovie.poster_path}`
+                : 'https://via.placeholder.com/300x450?text=No+Poster';
+            const resolvedTitle = matchedMovie && matchedMovie.title ? matchedMovie.title : movieTitle;
+            const resolvedYear = matchedMovie && matchedMovie.release_date
+                ? matchedMovie.release_date.split('-')[0]
+                : '';
+            const resolvedTmdbId = matchedMovie && matchedMovie.id ? String(matchedMovie.id) : '';
+
+            item.classList.add('home-rail-card');
+            item.dataset.tmdbId = resolvedTmdbId;
+            item.dataset.mediaType = 'movie';
+            item.dataset.movieTitle = resolvedTitle;
+            item.dataset.movieYear = resolvedYear;
+            item.dataset.moviePoster = posterPath;
+
+            const safeTitle = escapeHtml(resolvedTitle);
+            const safeYear = escapeHtml(resolvedYear);
+            const safePoster = escapeHtml(posterPath);
+
+            item.innerHTML = `
+                <img class="recon-poster" src="${safePoster}" alt="${safeTitle}">
+                <div class="home-rail-overlay">
+                    <h3>${safeTitle}${safeYear ? ` (${safeYear})` : ''}</h3>
+                    <p>MOVIE</p>
+                    <div class="home-rail-actions">
+                        <button class="home-rail-icon-btn" type="button" data-action="watch" aria-label="Play now" title="Play now">
+                            <img src="${safePlayIcon}" alt="" loading="lazy">
+                        </button>
+                        <button class="home-rail-icon-btn" type="button" data-action="watchlist" aria-label="Add to watchlist" title="Add to watchlist" aria-pressed="false">
+                            <img src="${safeWatchlistIcon}" alt="" loading="lazy">
+                        </button>
+                        <button class="home-rail-icon-btn" type="button" data-action="favorite" aria-label="Add to favorite" title="Add to favorite" aria-pressed="false">
+                            <img src="${safeFavoriteIcon}" alt="" loading="lazy">
+                        </button>
+                    </div>
+                </div>
+            `;
+
             if (i < movieItems.length - 1) {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
         }
-        
-        console.log('Finished loading fiscus poster images');
+
+        if (fiscusList.dataset.actionsBound !== 'true') {
+            fiscusList.addEventListener('click', async (event) => {
+                const actionBtn = event.target.closest('[data-action]');
+                const cardEl = event.target.closest('.home-rail-card');
+                if (!cardEl) {
+                    return;
+                }
+
+                if (actionBtn) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const action = actionBtn.dataset.action;
+
+                    if (action === 'watch' && !cardEl.dataset.tmdbId) {
+                        await searchAndNavigateToMovie(cardEl.dataset.movieTitle || '');
+                        return;
+                    }
+
+                    await handleHomeRailAction(cardEl, action);
+                    return;
+                }
+
+                if (cardEl.dataset.tmdbId) {
+                    openHomeRailMovie(cardEl);
+                } else {
+                    await searchAndNavigateToMovie(cardEl.dataset.movieTitle || '');
+                }
+            });
+
+            fiscusList.dataset.actionsBound = 'true';
+        }
     }
 
     async function searchAndNavigateToMovie(movieTitle) {
