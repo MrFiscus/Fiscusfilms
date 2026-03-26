@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const navBar = document.getElementById("navbar");
   const navMenu = document.querySelector(".nav-bar-sub");
   const navToggle = document.getElementById("nav-toggle");
+  const searchToggle = document.querySelector(".container .checkbox");
+  const searchInput = document.querySelector(".container .search_input");
 
   if (!navBar || !navMenu || !navToggle) {
     return;
@@ -41,6 +43,28 @@ document.addEventListener("DOMContentLoaded", () => {
       closeMenu();
     }
   });
+
+  function focusExpandedSearch() {
+    if (!searchInput) {
+      return;
+    }
+
+    // Wait a moment so the expand animation can finish before focusing.
+    window.setTimeout(() => {
+      searchInput.focus();
+      const endPos = searchInput.value.length;
+      searchInput.setSelectionRange(endPos, endPos);
+    }, 140);
+  }
+
+  if (searchToggle && searchInput) {
+    searchToggle.addEventListener("change", () => {
+      // Unchecked state is the expanded search box in this UI.
+      if (!searchToggle.checked) {
+        focusExpandedSearch();
+      }
+    });
+  }
 
   // Scroll detection for navbar background
   function updateNavBackground() {

@@ -135,6 +135,13 @@ padding-top: 2vh;
 
 
 }
+
+.home-view .nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
 .nav-colored { background-color: var(--dark-color);}
 .nav-transparent {background-color: transparent; }
 
@@ -1756,18 +1763,20 @@ border: 1px solid white;
 }
 
 .footer-logo-section {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: nowrap;
   white-space: nowrap;
+  width: fit-content;
 }
 
 .footer-logo {
   width: 32px;
   height: 32px;
   object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .footer-logo-section .title {
@@ -1775,6 +1784,7 @@ border: 1px solid white;
   padding: 0;
   font-size: var(--brand-title-size);
   line-height: 1;
+  flex: 0 0 auto;
 }
 
 .footer-description {
@@ -1914,6 +1924,8 @@ border: 1px solid white;
 
   .footer-logo-section {
     justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .footer-description {
@@ -2219,14 +2231,13 @@ border: 1px solid white;
 }
 
 .watchlist-section .movie-recomen-moviesbox {
-  width: 100vw;
+  width: 100%;
   height: calc(var(--list-card-height) + 2vh);
-  margin: 0 calc(-50vw + 50%);
-  padding: 0;
+  margin: 0 auto;
+  padding: 0 var(--slider-side-space);
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
-  padding-left: 8px;
 }
 
 .watchlist-grid {
@@ -2235,7 +2246,7 @@ border: 1px solid white;
   list-style: none;
   gap: 8px;
   margin: 0;
-  padding: 0 var(--slider-side-space);
+  padding: 0;
   position: relative;
 }
 
@@ -3274,13 +3285,13 @@ border: 1px solid white;
     height: var(--brand-logo-size-mobile);
   }
 
-  .footer-logo .title {
+  .footer-logo-section .title {
     font-size: var(--brand-title-size-mobile);
   }
 
-  .footer-logo .logo {
-    width: var(--brand-logo-size-mobile);
-    height: var(--brand-logo-size-mobile);
+  .footer-logo-section .footer-logo {
+    width: 30px;
+    height: 30px;
   }
 
   .footer-main {
@@ -3357,6 +3368,7 @@ border: 1px solid white;
     font-size: 22px;
     margin-bottom: 10px;
   }
+    gap: 10px;
 
   .profile-form {
     grid-template-columns: 1fr;
