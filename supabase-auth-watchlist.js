@@ -792,11 +792,18 @@
 
   async function signOut() {
     if (!supabaseClient) {
+      window.location.href = "index.html";
       return;
     }
 
-    await supabaseClient.auth.signOut();
-    window.location.href = "index.html";
+    try {
+      // Local sign-out clears this browser session immediately.
+      await supabaseClient.auth.signOut({ scope: "local" });
+    } catch (error) {
+      console.error("Sign out failed:", error);
+    } finally {
+      window.location.href = "index.html";
+    }
   }
 
   async function addMovieToWatchlist(movie) {
