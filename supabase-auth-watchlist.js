@@ -322,7 +322,7 @@
     }
 
     if (result.needsEmailConfirm) {
-      setAuthStatus("Account created. Check your email to confirm your account, then sign in.");
+      setAuthStatus("✓ Account created! Check your email (and spam folder) for a verification link. Click it to confirm, then sign in here.");
       pendingVerificationEmail = email;
       showResendVerificationButton(true);
       setAuthMode("signin");

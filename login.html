@@ -114,6 +114,32 @@
     <script src="moviepagescript.js"></script>
     <script src="supabase-auth-watchlist.js"></script>
     <script src="navbar.js"></script>
+
+    <!-- OAuth Callback Handler -->
+    <script>
+      (function() {
+        // Check for OAuth callback fragment (e.g., #access_token=...)
+        if (window.location.hash) {
+          const fragment = window.location.hash.substring(1);
+          if (fragment.includes('access_token') || fragment.includes('code')) {
+            // OAuth callback detected - wait for session to be established
+            setTimeout(async () => {
+              if (window.supabase && window.SUPABASE_CONFIG) {
+                const client = window.supabase.createClient(
+                  window.SUPABASE_CONFIG.url,
+                  window.SUPABASE_CONFIG.anonKey
+                );
+                const { data } = await client.auth.getSession();
+                if (data && data.session && data.session.user) {
+                  // User is authenticated, redirect to profile
+                  window.location.href = 'profile.html';
+                }
+              }
+            }, 500);
+          }
+        }
+      })();
+    </script>
   </div>
 </body>
 </html>
