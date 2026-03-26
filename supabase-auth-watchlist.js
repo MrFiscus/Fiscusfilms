@@ -21,6 +21,9 @@
   const profileLink = document.getElementById("profile-link");
   const profileAvatar = profileLink ? profileLink.querySelector(".profile-avatar") : null;
   const watchlistGrid = document.getElementById("watchlist-grid");
+  const watchlistViewport = watchlistGrid ? watchlistGrid.parentElement : null;
+  const watchlistPrevBtn = document.getElementById("watchlist-prev-slide");
+  const watchlistNextBtn = document.getElementById("watchlist-next-slide");
   const watchlistEmpty = document.getElementById("watchlist-empty");
   const watchlistLoading = document.getElementById("watchlist-loading");
   const SEARCH_HISTORY_LIMIT = 30;
@@ -579,6 +582,27 @@
     }
   }
 
+  function updateWatchlistSliderVisibility() {
+    if (!watchlistGrid || !watchlistViewport || !watchlistPrevBtn || !watchlistNextBtn) {
+      return;
+    }
+
+    if (!watchlistGrid.children.length) {
+      watchlistPrevBtn.classList.add("hidden");
+      watchlistNextBtn.classList.add("hidden");
+      watchlistGrid.style.transform = "translateX(0px)";
+      return;
+    }
+
+    const needsScroll = watchlistGrid.scrollWidth > (watchlistViewport.clientWidth + 1);
+    watchlistPrevBtn.classList.toggle("hidden", !needsScroll);
+    watchlistNextBtn.classList.toggle("hidden", !needsScroll);
+
+    if (!needsScroll) {
+      watchlistGrid.style.transform = "translateX(0px)";
+    }
+  }
+
   function renderWatchlistItems(items) {
     if (!watchlistGrid || !watchlistEmpty) {
       return;
@@ -639,6 +663,7 @@
         });
         
         viewportContainer.appendChild(messageOverlay);
+        updateWatchlistSliderVisibility();
       });
       return;
     }
@@ -646,6 +671,7 @@
     if (!items.length) {
       watchlistEmpty.textContent = "No movies in your watchlist yet.";
       watchlistEmpty.classList.remove("hidden");
+      updateWatchlistSliderVisibility();
       return;
     }
 
@@ -710,6 +736,11 @@
 
       watchlistGrid.dataset.actionsBound = "true";
     }
+
+    updateWatchlistSliderVisibility();
+
+    // Re-check after images settle to avoid false positives before posters load.
+    window.setTimeout(updateWatchlistSliderVisibility, 200);
   }
 
   async function refreshWatchlist() {
@@ -728,6 +759,7 @@
         window.initializeHorizontalSlider("#watchlist-grid", "watchlist-next-slide", "watchlist-prev-slide", {
           enableGestures: false
         });
+        updateWatchlistSliderVisibility();
       }, 0);
     }
   }
@@ -918,6 +950,8 @@
     }
 
     await updateSessionState();
+
+    window.addEventListener("resize", updateWatchlistSliderVisibility);
 
     supabaseClient.auth.onAuthStateChange(async () => {
       await updateSessionState();
