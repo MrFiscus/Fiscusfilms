@@ -136,6 +136,37 @@
                 return params.get('movie') || localStorage.getItem('movieID') || localStorage.getItem('selectedMovieID') || '';
             }
 
+            async function openRecommendedFromLink(linkEl) {
+                if (!linkEl) {
+                    return;
+                }
+
+                const selectedId = linkEl.dataset.id;
+                const selectedType = linkEl.dataset.mediaType || 'movie';
+
+                if (!selectedId) {
+                    return;
+                }
+
+                if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
+                    const cardImage = linkEl.querySelector('.recon-poster');
+                    window.FiscusAuth.addSearchHistory({
+                        tmdb_id: selectedId,
+                        media_type: selectedType,
+                        title: cardImage ? cardImage.alt : 'Unknown',
+                        year: 'N/A',
+                        poster: cardImage ? cardImage.src : ''
+                    });
+                }
+
+                localStorage.setItem('tmdbMovieID', selectedId);
+                localStorage.setItem('tmdbMediaType', selectedType);
+                localStorage.removeItem('movieID');
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                await displayMovieDetails();
+            }
+
             async function resolveTmdbSelection(tmdbApiKey) {
                 const requestedImdbId = getRequestedImdbId();
                 if (!requestedImdbId) {
@@ -497,7 +528,7 @@
                 if (recommendedMoviesList && recommendedMoviesEmpty) {
                     const recommendationCards = recommendations
                         .filter((item) => item.poster_path)
-                        .slice(0, 18)
+                        .slice(0, 20)
                         .map((item) => {
                             const recTitle = item.title || item.name || 'Untitled';
                             const recPoster = `${TMDB_IMAGE_BASE}${item.poster_path}`;
@@ -539,24 +570,28 @@
                     if (recommendedMoviesList.dataset.actionsBound !== 'true') {
                         recommendedMoviesList.addEventListener('click', async (event) => {
                             const actionBtn = event.target.closest('[data-action]');
+                            const cardEl = event.target.closest('.home-rail-card');
+                            if (!cardEl) {
+                                return;
+                            }
+
+                            const cardLink = cardEl.querySelector('.recommended-item-link');
+                            if (!cardLink) {
+                                return;
+                            }
+
                             if (!actionBtn) {
+                                event.preventDefault();
+                                await openRecommendedFromLink(cardLink);
                                 return;
                             }
 
                             event.preventDefault();
                             event.stopPropagation();
 
-                            const cardEl = actionBtn.closest('.home-rail-card');
-                            if (!cardEl) {
-                                return;
-                            }
-
                             const action = actionBtn.dataset.action;
                             if (action === 'watch') {
-                                const link = cardEl.querySelector('.recommended-item-link');
-                                if (link) {
-                                    link.click();
-                                }
+                                await openRecommendedFromLink(cardLink);
                                 return;
                             }
 
@@ -571,7 +606,6 @@
                                 return;
                             }
 
-                            const cardLink = cardEl.querySelector('.recommended-item-link');
                             const recId = cardLink ? cardLink.dataset.id : '';
                             const recMediaType = cardLink ? (cardLink.dataset.mediaType || 'movie') : 'movie';
                             const recTitleEl = cardEl.querySelector('.home-rail-overlay h3');
@@ -635,32 +669,6 @@
 
                         recommendedMoviesList.dataset.actionsBound = 'true';
                     }
-
-                    recommendedMoviesList.querySelectorAll('.recommended-item-link').forEach((link) => {
-                        link.addEventListener('click', async (event) => {
-                            event.preventDefault();
-                            const selectedId = link.dataset.id;
-                            const selectedType = link.dataset.mediaType || 'movie';
-
-                            if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
-                                const cardImage = link.querySelector('.recon-poster');
-                                window.FiscusAuth.addSearchHistory({
-                                    tmdb_id: selectedId,
-                                    media_type: selectedType,
-                                    title: cardImage ? cardImage.alt : 'Unknown',
-                                    year: 'N/A',
-                                    poster: cardImage ? cardImage.src : ''
-                                });
-                            }
-
-                            localStorage.setItem('tmdbMovieID', selectedId);
-                            localStorage.setItem('tmdbMediaType', selectedType);
-                            localStorage.removeItem('movieID');
-
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                            await displayMovieDetails();
-                        });
-                    });
                 }
             }
     
