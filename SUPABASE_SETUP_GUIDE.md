@@ -29,10 +29,12 @@ This guide explains how to properly configure Supabase for Facebook OAuth and Em
 ### Step 3: Configure Redirect URIs
 In your Facebook App settings, add these URLs to **Valid OAuth Redirect URIs**:
 ```
-https://eotvmsheeitniegagrby.supabase.co/auth/v1/callback?provider=facebook
+https://eotvmsheeitniegagrby.supabase.co/auth/v1/callback
 https://mrfiscus.github.io/Fiscusfilms/
 https://mrfiscus.github.io/Fiscusfilms/login.html
 ```
+
+Important: Use the Supabase callback URL exactly as shown above (no extra query params).
 
 For local testing, also add:
 ```
@@ -163,6 +165,14 @@ http://localhost:3000/profile.html
   
 - **Issue**: "App not configured for this URL"
   - **Fix**: Add current domain to Facebook App's Valid OAuth Redirect URIs
+
+- **Issue**: `{\"code\":500,\"error_code\":\"unexpected_failure\"}` at `supabase.co/auth/v1/callback`
+  - **Fix**: This is usually Facebook provider config mismatch. Verify all of the following:
+    1. Facebook Valid OAuth Redirect URI is exactly `https://eotvmsheeitniegagrby.supabase.co/auth/v1/callback`
+    2. Supabase `Authentication -> Providers -> Facebook` has correct App ID and App Secret
+    3. Facebook app is in Live mode (or your Facebook account is added as a test user/developer)
+    4. In Supabase `Authentication -> URL Configuration`, include `https://mrfiscus.github.io/Fiscusfilms/login.html`
+    5. Try login in a private window after saving settings (clears old OAuth state)
 
 ### Email Not Received
 - **Issue**: Verification emails not arriving
