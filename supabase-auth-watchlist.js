@@ -757,7 +757,7 @@
     if (window.initializeHorizontalSlider) {
       setTimeout(() => {
         window.initializeHorizontalSlider("#watchlist-grid", "watchlist-next-slide", "watchlist-prev-slide", {
-          enableGestures: false
+          enableGestures: true
         });
         updateWatchlistSliderVisibility();
       }, 0);
