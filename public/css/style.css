@@ -71,35 +71,35 @@ html {
 }
 
 .body-poster1 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/500daysofsummer.avif");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/500daysofsummer.avif");
 }
 
 .body-poster2 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/whiplash.jpg");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/whiplash.jpg");
 }
 
 .body-poster3 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/everythingeverywhere.jpg");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/everythingeverywhere.jpg");
 }
 
 .body-poster4 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/joker-2-poster-featured.avif");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/joker-2-poster-featured.avif");
 }
 
 .body-poster5 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/pastlives.jpg");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/pastlives.jpg");
 }
 
 .body-poster6 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/miracleincellno7.jpg");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/miracleincellno7.jpg");
 }
 
 .body-poster7 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/perks%20of%20being%20a%20wallflower.jpg");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/perks%20of%20being%20a%20wallflower.jpg");
 }
 
 .body-poster8 {
-  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("./images/memoriesofmurder.jpg");
+  background-image: linear-gradient(94deg, rgba(13, 27, 42, 0.8842130602240896) 62%, rgba(119, 141, 169, 0.5648853291316527) 94%), url("/assets/posters/memoriesofmurder.jpg");
 }
 
 .logo{
@@ -183,7 +183,7 @@ padding-top: 2vh;
 
 .nav-bar-buttons:focus,
 .nav-bar-buttons:hover {
-  color: #807d7d;
+  color: #b3b1b1;
 }
 
 .nav-bar-buttons:focus:after,
@@ -200,7 +200,7 @@ padding-top: 2vh;
   position: absolute;
   width: 0%;
   height: 3px;
-  background-color: #c3c0c0;
+  background-color: #bdbbbb;
   transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
   transition-duration: 400ms;
   transition-property: width, left;
@@ -1460,7 +1460,7 @@ aspect-ratio: 2 / 3;
 object-fit: cover;
 display: block;
 margin: 0;
-border: 4px solid #fff;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 .movie-info{
 text-align: center;
@@ -2413,7 +2413,7 @@ border: 1px solid white;
   margin-right: calc(50% - 50vw);
   padding-left: max(12px, calc((100vw - 1240px) / 2));
   padding-right: max(12px, calc((100vw - 1240px) / 2));
-  background-image: url("images/joker-2-poster-featured.avif");
+  background-image: url("/assets/posters/joker-2-poster-featured.avif");
   background-size: cover;
   background-position: center top;
 }
@@ -2706,6 +2706,10 @@ border: 1px solid white;
   margin-bottom: 12px;
 }
 
+.profile-full-row-field {
+  grid-column: 1 / -1;
+}
+
 .profile-field label {
   font-family: "Oswald", sans-serif;
   font-weight: 300;
@@ -2734,6 +2738,18 @@ border: 1px solid white;
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.profile-avatar-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.profile-avatar-help {
+  color: #c4cfdb;
+  font-size: 0.78rem;
 }
 
 .profile-backdrop-input {

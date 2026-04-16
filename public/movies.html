@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FiscusFilms</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/css/style.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
         </style>
     <style>
          @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
     </style>
-          <link rel="icon" type="image/png" href="./image-removebg-preview (1).png"/>
+          <link rel="icon" type="image/png" href="/assets/image-removebg-preview (1).png"/>
           
 </head>
 <body>
@@ -22,7 +22,7 @@
     <div class="movie-hero-surface" id="movie-hero-surface">
     <div class="nav-bar" id="navbar">
         <div class="logo">
-            <img class="logo" src="./image-removebg-preview (1).png" alt="" srcset="">
+            <img class="logo" src="/assets/image-removebg-preview (1).png" alt="" srcset="">
             <a href="index.html"> <h1 class="title">FiscusFilms</h1> </a></div>
         <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
             <svg class="nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -114,21 +114,20 @@
             const castNextButton = document.getElementById('cast-next-slide');
             const recommendedMoviesList = document.getElementById('recommended-movies-list');
             const recommendedMoviesEmpty = document.getElementById('recommended-movies-empty');
-            const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+            const TMDB_BASE_URL = '/api/tmdb';
             const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
             const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
             const TMDB_IMAGE_ORIGINAL_BASE = 'https://image.tmdb.org/t/p/original';
 
-            function getTmdbApiKey() {
-                if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
-                    return null;
-                }
+            function getRequestedTmdbSelection() {
+                const params = new URLSearchParams(window.location.search);
+                const tmdbId = params.get('tmdb') || localStorage.getItem('tmdbMovieID') || '';
+                const mediaType = params.get('type') || localStorage.getItem('tmdbMediaType') || 'movie';
 
-                if (window.TMDB_CONFIG.apiKey.includes('YOUR_TMDB_API_KEY')) {
-                    return null;
-                }
-
-                return window.TMDB_CONFIG.apiKey;
+                return {
+                    tmdbMovieID: tmdbId,
+                    tmdbMediaType: mediaType === 'tv' ? 'tv' : 'movie'
+                };
             }
 
             function getRequestedImdbId() {
@@ -162,23 +161,38 @@
                 localStorage.setItem('tmdbMovieID', selectedId);
                 localStorage.setItem('tmdbMediaType', selectedType);
                 localStorage.removeItem('movieID');
+                localStorage.removeItem('selectedMovieID');
 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 await displayMovieDetails();
             }
 
-            async function resolveTmdbSelection(tmdbApiKey) {
+            async function resolveTmdbSelection() {
+                const tmdbSelection = getRequestedTmdbSelection();
+                if (tmdbSelection.tmdbMovieID) {
+                    localStorage.setItem('tmdbMovieID', tmdbSelection.tmdbMovieID);
+                    localStorage.setItem('tmdbMediaType', tmdbSelection.tmdbMediaType);
+                    localStorage.removeItem('movieID');
+                    localStorage.removeItem('selectedMovieID');
+
+                    return {
+                        tmdbMovieID: tmdbSelection.tmdbMovieID,
+                        tmdbMediaType: tmdbSelection.tmdbMediaType,
+                        errorMessage: ''
+                    };
+                }
+
                 const requestedImdbId = getRequestedImdbId();
                 if (!requestedImdbId) {
                     return {
-                        tmdbMovieID: localStorage.getItem('tmdbMovieID') || '',
-                        tmdbMediaType: localStorage.getItem('tmdbMediaType') || 'movie',
+                        tmdbMovieID: '',
+                        tmdbMediaType: 'movie',
                         errorMessage: ''
                     };
                 }
 
                 try {
-                    const response = await fetch(`${TMDB_BASE_URL}/find/${encodeURIComponent(requestedImdbId)}?api_key=${tmdbApiKey}&external_source=imdb_id`);
+                    const response = await fetch(`${TMDB_BASE_URL}/find/${encodeURIComponent(requestedImdbId)}?external_source=imdb_id`);
                     if (!response.ok) {
                         return {
                             tmdbMovieID: '',
@@ -203,6 +217,8 @@
 
                     localStorage.setItem('tmdbMovieID', String(match.id));
                     localStorage.setItem('tmdbMediaType', mediaType);
+                    localStorage.removeItem('movieID');
+                    localStorage.removeItem('selectedMovieID');
 
                     return {
                         tmdbMovieID: String(match.id),
@@ -219,14 +235,7 @@
             }
     
             async function displayMovieDetails() {
-                const tmdbApiKey = getTmdbApiKey();
-
-                if (!tmdbApiKey) {
-                    movieDetailsContainer.innerHTML = '<p>TMDb API key is missing in tmdb-config.js.</p>';
-                    return;
-                }
-
-                const selection = await resolveTmdbSelection(tmdbApiKey);
+                const selection = await resolveTmdbSelection();
                 const tmdbMovieID = selection.tmdbMovieID;
                 const tmdbMediaType = selection.tmdbMediaType;
 
@@ -235,7 +244,7 @@
                     return;
                 }
 
-                const res = await fetch(`${TMDB_BASE_URL}/${tmdbMediaType}/${tmdbMovieID}?api_key=${tmdbApiKey}&append_to_response=credits,external_ids,watch/providers,videos,recommendations,images&include_image_language=en,null`);
+                const res = await fetch(`${TMDB_BASE_URL}/${tmdbMediaType}/${tmdbMovieID}?append_to_response=credits,external_ids,watch/providers,videos,recommendations,images&include_image_language=en,null`);
                 const details = await res.json();
 
                 if (details.success === false) {
@@ -544,13 +553,13 @@
                                         <p>${tmdbMediaType && tmdbMediaType.toUpperCase()}</p>
                                         <div class="home-rail-actions">
                                             <button class="home-rail-icon-btn" type="button" data-action="watch" aria-label="Play now" title="Play now">
-                                                <img src="play-512.png" alt="" loading="lazy">
+                                                <img src="/assets/play-512.png" alt="" loading="lazy">
                                             </button>
                                             <button class="home-rail-icon-btn" type="button" data-action="watchlist" aria-label="Add to watchlist" title="Add to watchlist" aria-pressed="false">
-                                                <img src="plus-2-512.png" alt="" loading="lazy">
+                                                <img src="/assets/plus-2-512.png" alt="" loading="lazy">
                                             </button>
                                             <button class="home-rail-icon-btn" type="button" data-action="favorite" aria-label="Add to favorite" title="Add to favorite" aria-pressed="false">
-                                                <img src="favorite-2-512.png" alt="" loading="lazy">
+                                                <img src="/assets/favorite-2-512.png" alt="" loading="lazy">
                                             </button>
                                         </div>
                                     </div>
@@ -618,14 +627,9 @@
                                     return '';
                                 }
 
-                                const apiKey = window.TMDB_CONFIG && window.TMDB_CONFIG.apiKey;
-                                if (!apiKey || apiKey.includes('YOUR_TMDB_API_KEY')) {
-                                    return '';
-                                }
-
                                 const endpoint = mediaType === 'tv'
-                                    ? `https://api.themoviedb.org/3/tv/${tmdbId}/external_ids?api_key=${apiKey}`
-                                    : `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${apiKey}`;
+                                    ? `${TMDB_BASE_URL}/tv/${tmdbId}/external_ids`
+                                    : `${TMDB_BASE_URL}/movie/${tmdbId}`;
 
                                 try {
                                     const response = await fetch(endpoint);
@@ -682,7 +686,7 @@
             <div class="footer-content">
                 <div class="footer-branding">
                     <div class="footer-logo-section">
-                        <img class="footer-logo" src="./image-removebg-preview (1).png" alt="FiscusFilms logo">
+                        <img class="footer-logo" src="/assets/image-removebg-preview (1).png" alt="FiscusFilms logo">
                         <h1 class="title">FiscusFilms</h1>
                     </div>
                     <p class="footer-description">Your gateway to cinematic excellence. Explore, stream, and discover movies across all genres.</p>
@@ -753,11 +757,13 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="tmdb-config.js"></script>
-<script src="supabase-auth-watchlist.js"></script>
-<script src="navbar.js"></script>
-<script src="moviepagescript.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/realtime-client.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/tmdb-config.js"></script>
+<script src="/js/supabase-auth-watchlist.js"></script>
+<script src="/js/navbar.js"></script>
+<script src="/js/moviepagescript.js"></script>
 </div>
 </body>
 </html>

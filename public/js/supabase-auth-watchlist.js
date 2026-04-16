@@ -28,16 +28,39 @@
   const watchlistLoading = document.getElementById("watchlist-loading");
   const SEARCH_HISTORY_LIMIT = 30;
   const WATCHLIST_ACTION_ICONS = {
-    watch: "play-512.png",
-    watchlist: "plus-2-512.png",
-    favorite: "favorite-2-512.png",
-    remove: "trash-2-512.png"
+    watch: "/assets/play-512.png",
+    watchlist: "/assets/plus-2-512.png",
+    favorite: "/assets/favorite-2-512.png",
+    remove: "/assets/trash-2-512.png"
   };
 
   let supabaseClient = null;
   let currentUser = null;
   let authMode = "signup";
   let pendingVerificationEmail = "";
+  let resolveAuthReady = null;
+  const authReady = new Promise((resolve) => {
+    resolveAuthReady = resolve;
+  });
+
+  function finishAuthReady() {
+    if (resolveAuthReady) {
+      resolveAuthReady();
+      resolveAuthReady = null;
+    }
+  }
+
+  function getSupabaseClient() {
+    return supabaseClient;
+  }
+
+  function getCurrentUser() {
+    return currentUser;
+  }
+
+  function waitUntilReady() {
+    return authReady;
+  }
 
   function isConfigured() {
     if (!window.SUPABASE_CONFIG || !window.supabase) {
@@ -61,6 +84,22 @@
         statusEl.classList.add("hidden");
       }
     }
+  }
+
+  function emitRealtimeAuthEvent(type, details) {
+    if (!window.FiscusRealtime || typeof window.FiscusRealtime.emitAuthEvent !== "function") {
+      return;
+    }
+
+    window.FiscusRealtime.emitAuthEvent(type, details || {});
+  }
+
+  function emitRealtimeAppEvent(type, details) {
+    if (!window.FiscusRealtime || typeof window.FiscusRealtime.emitAppEvent !== "function") {
+      return;
+    }
+
+    window.FiscusRealtime.emitAppEvent(type, details || {});
   }
 
   function showResendVerificationButton(show) {
@@ -98,6 +137,48 @@
     }
 
     profileLink.setAttribute("href", loggedIn ? "profile.html" : "login.html");
+  }
+
+  function getSupabaseProjectRef() {
+    try {
+      const host = new URL(window.SUPABASE_CONFIG.url).hostname;
+      return host.split(".")[0] || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function clearSupabaseAuthStorage() {
+    const projectRef = getSupabaseProjectRef();
+    const knownKeys = [
+      projectRef ? `sb-${projectRef}-auth-token` : "",
+      projectRef ? `sb-${projectRef}-auth-token-code-verifier` : "",
+      "supabase.auth.token"
+    ].filter(Boolean);
+
+    [window.localStorage, window.sessionStorage].forEach((storage) => {
+      if (!storage) {
+        return;
+      }
+
+      knownKeys.forEach((key) => storage.removeItem(key));
+
+      for (let index = storage.length - 1; index >= 0; index -= 1) {
+        const key = storage.key(index);
+        if (!key) {
+          continue;
+        }
+
+        const isSupabaseAuthKey = key.startsWith("sb-") && (
+          key.includes("-auth-token") ||
+          key.includes("code-verifier")
+        );
+
+        if (isSupabaseAuthKey) {
+          storage.removeItem(key);
+        }
+      }
+    });
   }
 
   function escapeHtml(value) {
@@ -224,6 +305,7 @@
       email: normalizedEmail,
       password: payload.password,
       options: {
+        emailRedirectTo: window.SUPABASE_CONFIG.redirectTo,
         data: {
           first_name: payload.firstName,
           last_name: payload.lastName,
@@ -257,6 +339,7 @@
 
     if (!email || !password) {
       setAuthStatus("Enter email and password.");
+      emitRealtimeAuthEvent("submit:error", { mode: authMode, reason: "missing_credentials" });
       return;
     }
 
@@ -266,12 +349,14 @@
 
     if (authMode === "signin") {
       setAuthStatus("Signing in...");
+      emitRealtimeAuthEvent("submit:start", { mode: "signin" });
       const result = await signInWithEmailPassword(email, password);
       if (authSubmitBtn) {
         authSubmitBtn.disabled = false;
       }
 
       if (!result.ok) {
+        emitRealtimeAuthEvent("submit:error", { mode: "signin", reason: "signin_failed" });
         const rawMessage = String(result.message || "");
         if (rawMessage.toLowerCase().includes("invalid login credentials")) {
           setAuthStatus("Invalid credentials. If you just created this account, confirm your email first, then try again.");
@@ -285,6 +370,7 @@
       }
 
       setAuthStatus("Signed in. Redirecting to profile...");
+      emitRealtimeAuthEvent("submit:success", { mode: "signin" });
       showResendVerificationButton(false);
       window.location.href = "profile.html";
       return;
@@ -298,6 +384,7 @@
         authSubmitBtn.disabled = false;
       }
       setAuthStatus("Enter your first and last name.");
+      emitRealtimeAuthEvent("submit:error", { mode: "signup", reason: "missing_name" });
       return;
     }
 
@@ -306,10 +393,12 @@
         authSubmitBtn.disabled = false;
       }
       setAuthStatus("You must accept the terms to create an account.");
+      emitRealtimeAuthEvent("submit:error", { mode: "signup", reason: "terms_required" });
       return;
     }
 
     setAuthStatus("Creating account...");
+    emitRealtimeAuthEvent("submit:start", { mode: "signup" });
     const result = await signUpWithEmailPassword({ firstName, lastName, email, password });
 
     if (authSubmitBtn) {
@@ -318,11 +407,13 @@
 
     if (!result.ok) {
       setAuthStatus(result.message);
+      emitRealtimeAuthEvent("submit:error", { mode: "signup", reason: "signup_failed" });
       return;
     }
 
     if (result.needsEmailConfirm) {
-      setAuthStatus("✓ Account created! Check your email (and spam folder) for a verification link. Click it to confirm, then sign in here.");
+      setAuthStatus("Account created! Check your email (and spam folder) for a verification link. Click it to confirm, then sign in here.");
+      emitRealtimeAuthEvent("submit:success", { mode: "signup", verification: "pending" });
       pendingVerificationEmail = email;
       showResendVerificationButton(true);
       setAuthMode("signin");
@@ -330,6 +421,7 @@
     }
 
     setAuthStatus("Account created. Redirecting to profile...");
+    emitRealtimeAuthEvent("submit:success", { mode: "signup", verification: "complete" });
     showResendVerificationButton(false);
     window.location.href = "profile.html";
   }
@@ -400,6 +492,11 @@
     if (existingIndex >= 0) {
       favorites.splice(existingIndex, 1);
       writeCollection("favorites", favorites);
+      emitRealtimeAppEvent("favorite:toggle", {
+        userId: currentUser && currentUser.id ? currentUser.id : "guest",
+        imdbId: movie.imdb_id,
+        liked: false
+      });
       return { ok: true, liked: false, message: "Removed from favorites." };
     }
 
@@ -413,6 +510,11 @@
     });
 
     writeCollection("favorites", favorites.slice(0, SEARCH_HISTORY_LIMIT));
+    emitRealtimeAppEvent("favorite:toggle", {
+      userId: currentUser && currentUser.id ? currentUser.id : "guest",
+      imdbId: movie.imdb_id,
+      liked: true
+    });
     return { ok: true, liked: true, message: "Added to favorites." };
   }
 
@@ -467,6 +569,8 @@
 
   function openMovieDetails(imdbId) {
     localStorage.setItem("movieID", imdbId);
+    localStorage.removeItem("tmdbMovieID");
+    localStorage.removeItem("tmdbMediaType");
     window.location.href = "movies.html";
   }
 
@@ -546,19 +650,9 @@
 
   async function fetchRandomMovies() {
     try {
-      let apiKey = null;
-      if (window.TMDB_CONFIG && window.TMDB_CONFIG.apiKey && !window.TMDB_CONFIG.apiKey.includes("YOUR_TMDB_API_KEY")) {
-        apiKey = window.TMDB_CONFIG.apiKey;
-      }
-      
-      if (!apiKey) {
-        console.warn("TMDB API key not found for random movies preview");
-        return [];
-      }
-
       const randomPage = Math.floor(Math.random() * 50) + 1;
       const response = await fetch(
-        `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${randomPage}`
+        `/api/tmdb/movie/popular?language=en-US&page=${randomPage}`
       );
 
       if (!response.ok) {
@@ -769,12 +863,19 @@
       return;
     }
 
-    await supabaseClient.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.SUPABASE_CONFIG.redirectTo
-      }
-    });
+    emitRealtimeAuthEvent("oauth:start", { provider: "google" });
+    try {
+      await supabaseClient.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.SUPABASE_CONFIG.redirectTo
+        }
+      });
+      emitRealtimeAuthEvent("oauth:redirect", { provider: "google" });
+    } catch (error) {
+      emitRealtimeAuthEvent("oauth:error", { provider: "google" });
+      setAuthStatus("Google login failed. Please try again.");
+    }
   }
 
   async function signInWithFacebook() {
@@ -782,28 +883,65 @@
       return;
     }
 
-    await supabaseClient.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        redirectTo: window.SUPABASE_CONFIG.redirectTo
-      }
-    });
+    emitRealtimeAuthEvent("oauth:start", { provider: "facebook" });
+    try {
+      await supabaseClient.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          redirectTo: window.SUPABASE_CONFIG.redirectTo
+        }
+      });
+      emitRealtimeAuthEvent("oauth:redirect", { provider: "facebook" });
+    } catch (error) {
+      emitRealtimeAuthEvent("oauth:error", { provider: "facebook" });
+      setAuthStatus("Facebook login failed. Please try again.");
+    }
   }
 
   async function signOut() {
-    if (!supabaseClient) {
-      window.location.href = "index.html";
-      return;
+    const signedOutUserId = currentUser && currentUser.id ? currentUser.id : "unknown";
+
+    if (logoutBtn) {
+      logoutBtn.disabled = true;
     }
+    setAuthStatus("Signing out...");
+
+    emitRealtimeAppEvent("auth:signout", {
+      userId: signedOutUserId,
+      phase: "start"
+    });
+
+    clearSupabaseAuthStorage();
+    currentUser = null;
+    updateProfileLinkDestination(false);
+    updateProfileAvatar("");
+    toggleAuthButtons(false);
 
     try {
-      // Local sign-out clears this browser session immediately.
-      await supabaseClient.auth.signOut({ scope: "local" });
-    } catch (error) {
-      console.error("Sign out failed:", error);
-    } finally {
-      window.location.href = "index.html";
+      localStorage.setItem("fiscus:auth:signout", JSON.stringify({
+        userId: signedOutUserId,
+        at: new Date().toISOString()
+      }));
+    } catch (_) {
+      // Ignore storage failures.
     }
+
+    document.dispatchEvent(new CustomEvent("fiscus:auth-signed-out", {
+      detail: { userId: signedOutUserId }
+    }));
+
+    emitRealtimeAppEvent("auth:signout", {
+      userId: signedOutUserId,
+      phase: "complete"
+    });
+
+    if (supabaseClient) {
+      supabaseClient.auth.signOut({ scope: "local" }).catch((error) => {
+        console.warn("Local sign out completed, but Supabase returned an error:", error);
+      });
+    }
+
+    window.location.replace("/");
   }
 
   async function addMovieToWatchlist(movie) {
@@ -830,6 +968,11 @@
     }
 
     await refreshWatchlist();
+    emitRealtimeAppEvent("watchlist:add", {
+      userId: currentUser.id,
+      imdbId: movie.imdb_id,
+      tmdbId: movie.tmdb_id || ""
+    });
     return { ok: true, message: "Added to watchlist." };
   }
 
@@ -904,6 +1047,7 @@
       if (watchlistEmpty) {
         watchlistEmpty.textContent = "Configure Supabase to use watchlist.";
       }
+      finishAuthReady();
       return;
     }
 
@@ -953,7 +1097,11 @@
     }
 
     if (logoutBtn) {
-      logoutBtn.addEventListener("click", signOut);
+      logoutBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        signOut();
+      });
     }
 
     await updateSessionState();
@@ -963,6 +1111,47 @@
     supabaseClient.auth.onAuthStateChange(async () => {
       await updateSessionState();
     });
+
+    if (window.FiscusRealtime && typeof window.FiscusRealtime.onAppEvent === "function") {
+      window.FiscusRealtime.onAppEvent(async (payload) => {
+        if (!payload || !payload.type) {
+          return;
+        }
+
+        const details = payload.details || {};
+        const sameUser = currentUser && details.userId && currentUser.id === details.userId;
+
+        if (payload.type === "watchlist:add" && sameUser) {
+          await refreshWatchlist();
+          return;
+        }
+
+        if (payload.type === "favorite:toggle" && sameUser) {
+          setAuthStatus(details.liked ? "Favorite added in another tab." : "Favorite removed in another tab.");
+          return;
+        }
+
+        if (payload.type === "auth:signout" && sameUser) {
+          await updateSessionState();
+          if (!window.location.pathname.endsWith("/") && !window.location.pathname.endsWith("index.html")) {
+            window.location.replace("/");
+          }
+        }
+      });
+    }
+
+    window.addEventListener("storage", async (event) => {
+      if (event.key !== "fiscus:auth:signout" || !event.newValue) {
+        return;
+      }
+
+      await updateSessionState();
+      if (!window.location.pathname.endsWith("/") && !window.location.pathname.endsWith("index.html")) {
+        window.location.replace("/");
+      }
+    });
+
+    finishAuthReady();
   }
 
   window.FiscusAuth = {
@@ -975,7 +1164,10 @@
     isFavoriteMovie,
     toggleFavoriteMovie,
     addSearchHistory,
-    isAuthenticated
+    isAuthenticated,
+    getSupabaseClient,
+    getCurrentUser,
+    ready: waitUntilReady
   };
 
   document.addEventListener("DOMContentLoaded", init);

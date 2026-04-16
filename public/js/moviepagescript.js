@@ -1,35 +1,16 @@
-
 (function () {
 const movieSearchBox = document.getElementById('movie-search-box');
 const searchList = document.getElementById('search-list');
 
-const MOVIE_PAGE_TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const MOVIE_PAGE_TMDB_BASE_URL = "/api/tmdb";
 const MOVIE_PAGE_TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
-
-function getTmdbApiKey() {
-    if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
-        return null;
-    }
-
-    if (window.TMDB_CONFIG.apiKey.includes("YOUR_TMDB_API_KEY")) {
-        return null;
-    }
-
-    return window.TMDB_CONFIG.apiKey;
-}
 
 if (!movieSearchBox || !searchList) {
     return;
 }
 
-// load movies from API
 async function loadMovies(searchTerm){
-    const tmdbApiKey = getTmdbApiKey();
-    if (!tmdbApiKey) {
-        return;
-    }
-
-    const URL = `${MOVIE_PAGE_TMDB_BASE_URL}/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(searchTerm)}&include_adult=false&page=1`;
+    const URL = `${MOVIE_PAGE_TMDB_BASE_URL}/search/multi?query=${encodeURIComponent(searchTerm)}&include_adult=false&page=1`;
     const res = await fetch(URL);
     const data = await res.json();
     const mediaResults = (data.results || []).filter((item) => item.media_type === 'movie' || item.media_type === 'tv');
@@ -73,28 +54,13 @@ function displayMovieList(movies){
         </div>
         <div class = "search-item-info">
             <h3>${mediaTitle}</h3>
-            <p>${movieYear} • ${mediaLabel}</p>
+            <p>${movieYear} &bull; ${mediaLabel}</p>
         </div>
         `;
         searchList.appendChild(movieListItem);
     }
     loadMovieDetails();
 }
-
-// function loadMovieDetails(){
-//     const searchListMovies = searchList.querySelectorAll('.search-list-item');
-//     searchListMovies.forEach(movie => {
-//         movie.addEventListener('click', async () => {
-//             // console.log(movie.dataset.id);
-//             searchList.classList.add('hide-search-list');
-//             movieSearchBox.value = "";
-//             const result = await fetch(`http://www.omdbapi.com/?i=${movie.dataset.id}&apikey=apikey`);
-//             const movieDetails = await result.json();
-//             // console.log(movieDetails);
-//             displayMovieDetails(movieDetails);
-//         });
-//     });
-// }
 
 function loadMovieDetails() {
     const searchListMovies = searchList.querySelectorAll('.search-list-item');
@@ -118,7 +84,8 @@ function loadMovieDetails() {
             localStorage.setItem('tmdbMovieID', movie.dataset.id);
             localStorage.setItem('tmdbMediaType', movie.dataset.mediaType || 'movie');
             localStorage.removeItem('movieID');
-            window.location.href = 'movies.html';
+            localStorage.removeItem('selectedMovieID');
+            window.location.href = `movies.html?tmdb=${encodeURIComponent(movie.dataset.id)}&type=${encodeURIComponent(movie.dataset.mediaType || 'movie')}`;
         });
     });
 }
@@ -131,13 +98,4 @@ window.addEventListener('click', (event) => {
 
 // movies.html uses inline handlers (onkeyup/onclick), so keep this available globally.
 window.findMovies = findMovies;
-
 })();
-
-
-
-
-
-
-
-

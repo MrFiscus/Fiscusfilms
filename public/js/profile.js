@@ -26,12 +26,15 @@
   const uploadBackdropBtn = document.getElementById("profile-upload-backdrop-btn");
   const backdropFileInput = document.getElementById("profile-backdrop-file-input");
   const backdropSearchInput = document.getElementById("profile-backdrop-search");
+  const changeIconBtn = document.getElementById("profile-change-icon-btn");
+  const iconFileInput = document.getElementById("profile-icon-file-input");
+  const navProfileAvatar = document.querySelector("#profile-link .profile-avatar");
   const profileImageSurface = document.querySelector(".profile-image-surface");
   const ACTION_ICONS = {
-    watch: "play-512.png",
-    watchlist: "plus-2-512.png",
-    favorite: "favorite-2-512.png",
-    remove: "trash-2-512.png"
+    watch: "/assets/play-512.png",
+    watchlist: "/assets/plus-2-512.png",
+    favorite: "/assets/favorite-2-512.png",
+    remove: "/assets/trash-2-512.png"
   };
 
   let supabaseClient = null;
@@ -39,6 +42,8 @@
   let slidersInitialized = false;
   let profileBackdropCandidates = [];
   let lastBackdropPath = "";
+  let pendingBackdropSource = "";
+  let pendingAvatarSource = "";
   let profileBackdropTimer = null;
 
   function setStatus(message) {
@@ -57,6 +62,14 @@
 
     saveMessage.textContent = message;
     saveMessage.style.color = isError ? "#ffb4b4" : "#cfd6de";
+  }
+
+  function emitRealtimeAppEvent(type, details) {
+    if (!window.FiscusRealtime || typeof window.FiscusRealtime.emitAppEvent !== "function") {
+      return;
+    }
+
+    window.FiscusRealtime.emitAppEvent(type, details || {});
   }
 
   function isConfigured() {
@@ -170,19 +183,6 @@
     localStorage.setItem(getCollectionStorageKey(collectionName), JSON.stringify(items));
   }
 
-  function getTmdbApiKey() {
-    if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
-      return "";
-    }
-
-    const key = String(window.TMDB_CONFIG.apiKey);
-    if (key.includes("YOUR_TMDB_API_KEY")) {
-      return "";
-    }
-
-    return key;
-  }
-
   function buildTmdbBackdropUrl(backdropPath, size) {
     if (!backdropPath) {
       return "";
@@ -192,13 +192,8 @@
   }
 
   async function fetchDiscoverBackdropCandidates() {
-    const apiKey = getTmdbApiKey();
-    if (!apiKey) {
-      return [];
-    }
-
     const randomPage = Math.floor(Math.random() * 20) + 1;
-    const discoverUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&include_adult=false&include_video=false&language=en-US&page=${randomPage}&sort_by=popularity.desc&vote_count.gte=100`;
+    const discoverUrl = `/api/tmdb/discover/movie?include_adult=false&include_video=false&language=en-US&page=${randomPage}&sort_by=popularity.desc&vote_count.gte=100`;
 
     try {
       const response = await fetch(discoverUrl);
@@ -254,7 +249,7 @@
 
     profileImageSurface.style.backgroundImage = `url("${backdropUrl}")`;
     lastBackdropPath = backdropPath;
-    await saveBackdropToUserProfile(backdropUrl);
+    pendingBackdropSource = backdropUrl;
   }
 
   async function saveBackdropToUserProfile(backdropSource) {
@@ -273,6 +268,10 @@
       console.error("Failed to save backdrop:", error);
     } else if (currentUser.user_metadata) {
       currentUser.user_metadata.backdrop = backdropSource;
+      emitRealtimeAppEvent("backdrop:update", {
+        userId: currentUser.id,
+        backdrop: backdropSource
+      });
     }
   }
 
@@ -289,6 +288,7 @@
         profileImageSurface.style.backgroundImage = `url("${backdrop}")`;
         lastBackdropPath = backdrop;
       }
+      pendingBackdropSource = "";
       return true;
     } else if (backdrop.startsWith("http")) {
       // It's a TMDB URL
@@ -296,6 +296,7 @@
         profileImageSurface.style.backgroundImage = `url("${backdrop}")`;
         lastBackdropPath = backdrop;
       }
+      pendingBackdropSource = "";
       return true;
     }
 
@@ -307,14 +308,9 @@
       return false;
     }
 
-    const apiKey = getTmdbApiKey();
-    if (!apiKey) {
-      return false;
-    }
-
     try {
       // Search for the movie
-      const searchResponse = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieQuery)}&include_adult=false&page=1`);
+      const searchResponse = await fetch(`/api/tmdb/search/movie?query=${encodeURIComponent(movieQuery)}&include_adult=false&page=1`);
       if (!searchResponse.ok) {
         return false;
       }
@@ -396,15 +392,14 @@
   }
 
   async function fetchTmdbPosterPath(tmdbId, mediaType) {
-    const apiKey = getTmdbApiKey();
-    if (!apiKey || !tmdbId) {
+    if (!tmdbId) {
       return "";
     }
 
     const type = mediaType === "tv" ? "tv" : "movie";
 
     try {
-      const response = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${apiKey}`);
+      const response = await fetch(`/api/tmdb/${type}/${tmdbId}`);
       if (!response.ok) {
         return "";
       }
@@ -656,7 +651,7 @@
       localStorage.setItem("tmdbMediaType", mediaType);
       localStorage.removeItem("movieID");
       localStorage.removeItem("selectedMovieID");
-      window.location.href = "movies.html";
+      window.location.href = `movies.html?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
       return;
     }
 
@@ -728,6 +723,11 @@
     }
 
     let index = 0;
+    let lastGestureAt = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const SWIPE_THRESHOLD = 40;
+    const GESTURE_COOLDOWN_MS = 180;
 
     function getStep() {
       const firstItem = listEl.querySelector(".profile-rail-card");
@@ -779,8 +779,72 @@
       updateSlider();
     }
 
+    function canHandleGesture() {
+      const now = Date.now();
+      if (now - lastGestureAt < GESTURE_COOLDOWN_MS) {
+        return false;
+      }
+
+      lastGestureAt = now;
+      return true;
+    }
+
     prevBtn.addEventListener("click", () => slide(-1));
     nextBtn.addEventListener("click", () => slide(1));
+
+    viewport.addEventListener("touchstart", (event) => {
+      if (!event.touches || !event.touches.length) {
+        return;
+      }
+
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+    }, { passive: true });
+
+    viewport.addEventListener("touchend", (event) => {
+      if (!event.changedTouches || !event.changedTouches.length) {
+        return;
+      }
+
+      const deltaX = event.changedTouches[0].clientX - touchStartX;
+      const deltaY = event.changedTouches[0].clientY - touchStartY;
+
+      if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) {
+        return;
+      }
+
+      if (!canHandleGesture()) {
+        return;
+      }
+
+      if (deltaX < 0) {
+        slide(1);
+      } else {
+        slide(-1);
+      }
+    }, { passive: true });
+
+    viewport.addEventListener("wheel", (event) => {
+      const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        ? event.deltaX
+        : (event.shiftKey ? event.deltaY : 0);
+
+      if (Math.abs(horizontalIntent) < 20) {
+        return;
+      }
+
+      if (!canHandleGesture()) {
+        return;
+      }
+
+      event.preventDefault();
+      if (horizontalIntent > 0) {
+        slide(1);
+      } else {
+        slide(-1);
+      }
+    }, { passive: false });
+
     window.addEventListener("resize", updateSlider);
 
     listEl.__profileSliderUpdate = updateSlider;
@@ -839,6 +903,56 @@
     if (avatarPreview) {
       avatarPreview.src = resolvedAvatar;
     }
+
+    if (navProfileAvatar) {
+      navProfileAvatar.src = resolvedAvatar;
+      navProfileAvatar.classList.toggle("is-default", resolvedAvatar === FALLBACK_AVATAR);
+    }
+  }
+
+  async function handleAvatarFileUpload(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      setSaveMessage("Please select a valid image file for icon.", true);
+      return false;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setSaveMessage("User icon must be smaller than 2MB.", true);
+      return false;
+    }
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target.result;
+        if (!dataUrl) {
+          setSaveMessage("Could not read selected icon.", true);
+          resolve(false);
+          return;
+        }
+
+        pendingAvatarSource = dataUrl;
+
+        if (avatarPreview) {
+          avatarPreview.src = dataUrl;
+        }
+
+        if (navProfileAvatar) {
+          navProfileAvatar.src = dataUrl;
+          navProfileAvatar.classList.remove("is-default");
+        }
+
+        setSaveMessage("User icon preview updated. Click Save Profile to keep it.", false);
+        resolve(true);
+      };
+
+      reader.onerror = () => {
+        setSaveMessage("Failed to read icon file.", true);
+        resolve(false);
+      };
+
+      reader.readAsDataURL(file);
+    });
   }
 
   async function refreshCollections() {
@@ -858,6 +972,46 @@
     updateRailSliders();
   }
 
+  function resetSignedOutProfileUi() {
+    currentUser = null;
+    setStatus("Sign in to view your profile insights.");
+    setSaveMessage("", false);
+
+    if (formEl) {
+      formEl.classList.add("hidden");
+    }
+    if (nameHeading) {
+      nameHeading.textContent = "Guest User";
+    }
+    if (memberSinceEl) {
+      memberSinceEl.textContent = "-";
+    }
+    if (displayNameInput) {
+      displayNameInput.value = "";
+    }
+    if (emailInput) {
+      emailInput.value = "";
+    }
+    if (avatarPreview) {
+      avatarPreview.src = FALLBACK_AVATAR;
+    }
+    if (navProfileAvatar) {
+      navProfileAvatar.src = FALLBACK_AVATAR;
+      navProfileAvatar.classList.add("is-default");
+    }
+    if (profileImageSurface) {
+      profileImageSurface.style.backgroundImage = "";
+    }
+
+    pendingBackdropSource = "";
+    pendingAvatarSource = "";
+    updateCountSummary([], [], []);
+    renderRail(favoritesListEl, favoritesEmptyEl, []);
+    renderRail(watchlistListEl, watchlistEmptyEl, []);
+    renderRail(historyListEl, historyEmptyEl, []);
+    updateRailSliders();
+  }
+
   async function loadSession() {
     if (!supabaseClient) {
       return;
@@ -874,20 +1028,7 @@
     currentUser = data && data.session ? data.session.user : null;
 
     if (!currentUser) {
-      setStatus("Sign in to view your profile insights.");
-      if (formEl) {
-        formEl.classList.add("hidden");
-      }
-      if (nameHeading) {
-        nameHeading.textContent = "Guest User";
-      }
-      if (memberSinceEl) {
-        memberSinceEl.textContent = "-";
-      }
-      if (avatarPreview) {
-        avatarPreview.src = FALLBACK_AVATAR;
-      }
-      await refreshCollections();
+      resetSignedOutProfileUi();
       return;
     }
 
@@ -899,6 +1040,7 @@
     hydrateFormFromUser(currentUser);
     await loadSavedBackdrop();
     await refreshCollections();
+    pendingAvatarSource = "";
     setSaveMessage("", false);
   }
 
@@ -918,6 +1060,15 @@
         display_name: displayName
       }
     };
+
+    if (pendingBackdropSource) {
+      updates.data.backdrop = pendingBackdropSource;
+    }
+
+    if (pendingAvatarSource) {
+      updates.data.avatar_url = pendingAvatarSource;
+      updates.data.picture = pendingAvatarSource;
+    }
 
     if (email && email !== currentUser.email) {
       updates.email = email;
@@ -941,6 +1092,28 @@
     }
 
     currentUser = data && data.user ? data.user : currentUser;
+
+    if (pendingBackdropSource) {
+      if (!currentUser.user_metadata) {
+        currentUser.user_metadata = {};
+      }
+      currentUser.user_metadata.backdrop = pendingBackdropSource;
+      emitRealtimeAppEvent("backdrop:update", {
+        userId: currentUser.id,
+        backdrop: pendingBackdropSource
+      });
+      pendingBackdropSource = "";
+    }
+
+    if (pendingAvatarSource) {
+      if (!currentUser.user_metadata) {
+        currentUser.user_metadata = {};
+      }
+      currentUser.user_metadata.avatar_url = pendingAvatarSource;
+      currentUser.user_metadata.picture = pendingAvatarSource;
+      pendingAvatarSource = "";
+    }
+
     setStatus(`Signed in as ${currentUser.email}`);
     hydrateFormFromUser(currentUser);
 
@@ -996,6 +1169,7 @@
           // Use random backdrop
           await applyRandomProfileBackdrop();
           success = true;
+          setSaveMessage("Random backdrop previewed. Click Save Profile to keep it.", false);
         }
 
         changeBackdropBtn.disabled = false;
@@ -1012,7 +1186,7 @@
         if (spanEl) spanEl.textContent = "Picking...";
         
         await applyRandomProfileBackdrop();
-        setSaveMessage("Random backdrop applied!", false);
+        setSaveMessage("Random backdrop previewed. Click Save Profile to keep it.", false);
         
         pickRandomBtn.disabled = false;
         if (spanEl) spanEl.textContent = "Pick Random";
@@ -1041,6 +1215,32 @@
       });
     }
 
+    if (changeIconBtn && iconFileInput) {
+      changeIconBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        iconFileInput.click();
+      });
+
+      iconFileInput.addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          changeIconBtn.disabled = true;
+          const spanEl = changeIconBtn.querySelector("span");
+          if (spanEl) {
+            spanEl.textContent = "Uploading...";
+          }
+
+          await handleAvatarFileUpload(file);
+
+          changeIconBtn.disabled = false;
+          if (spanEl) {
+            spanEl.textContent = "Upload Icon";
+          }
+          iconFileInput.value = "";
+        }
+      });
+    }
+
     attachRailClickHandlers();
 
     if (!slidersInitialized) {
@@ -1057,10 +1257,20 @@
       return;
     }
 
-    supabaseClient = window.supabase.createClient(
-      window.SUPABASE_CONFIG.url,
-      window.SUPABASE_CONFIG.anonKey
-    );
+    if (window.FiscusAuth && typeof window.FiscusAuth.ready === "function") {
+      await window.FiscusAuth.ready();
+    }
+
+    supabaseClient = window.FiscusAuth && typeof window.FiscusAuth.getSupabaseClient === "function"
+      ? window.FiscusAuth.getSupabaseClient()
+      : null;
+
+    if (!supabaseClient) {
+      supabaseClient = window.supabase.createClient(
+        window.SUPABASE_CONFIG.url,
+        window.SUPABASE_CONFIG.anonKey
+      );
+    }
 
     formEl.addEventListener("submit", saveProfile);
 
@@ -1076,6 +1286,31 @@
     supabaseClient.auth.onAuthStateChange(async () => {
       await loadSession();
     });
+
+    document.addEventListener("fiscus:auth-signed-out", () => {
+      resetSignedOutProfileUi();
+    });
+
+    if (window.FiscusRealtime && typeof window.FiscusRealtime.onAppEvent === "function") {
+      window.FiscusRealtime.onAppEvent((payload) => {
+        if (!payload || payload.type !== "backdrop:update") {
+          return;
+        }
+
+        const details = payload.details || {};
+        if (!currentUser || !details.userId || currentUser.id !== details.userId) {
+          return;
+        }
+
+        if (!details.backdrop || !profileImageSurface) {
+          return;
+        }
+
+        profileImageSurface.style.backgroundImage = `url("${details.backdrop}")`;
+        lastBackdropPath = details.backdrop;
+        setSaveMessage("Backdrop updated from another tab.", false);
+      });
+    }
   }
 
   document.addEventListener("DOMContentLoaded", init);

@@ -171,29 +171,16 @@ function initializeHorizontalSlider(listSelector, nextButtonId, prevButtonId, op
     window.addEventListener("resize", applyTransform);
 }
 
-const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const TMDB_BASE_URL = "/api/tmdb";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 const HOME_ACTION_ICONS = {
-    watch: "play-512.png",
-    watchlist: "plus-2-512.png",
-    favorite: "favorite-2-512.png"
+    watch: "/assets/play-512.png",
+    watchlist: "/assets/plus-2-512.png",
+    favorite: "/assets/favorite-2-512.png"
 };
 const imdbCache = new Map();
 
-function getTmdbApiKey() {
-    if (!window.TMDB_CONFIG || !window.TMDB_CONFIG.apiKey) {
-        return null;
-    }
-
-    if (window.TMDB_CONFIG.apiKey.includes("YOUR_TMDB_API_KEY")) {
-        return null;
-    }
-
-    return window.TMDB_CONFIG.apiKey;
-}
-
 async function loadHomeMovieRails() {
-    const tmdbApiKey = getTmdbApiKey();
     renderRailMessage("trendingmovies", "Loading Trending Today...");
     renderRailMessage("nowplayingmovies", "Loading Now Playing...");
     renderRailMessage("upcomingmovies", "Loading Upcoming Movies...");
@@ -203,39 +190,26 @@ async function loadHomeMovieRails() {
     renderRailMessage("topratedtv", "Loading Top Rated TV Shows...");
     renderRailMessage("airingtv", "Loading Currently Airing...");
 
-    if (!tmdbApiKey) {
-        console.warn("TMDb key missing. Add it to tmdb-config.js to load content.");
-        renderRailMessage("trendingmovies", "Add TMDb API key in tmdb-config.js");
-        renderRailMessage("nowplayingmovies", "Add TMDb API key in tmdb-config.js");
-        renderRailMessage("upcomingmovies", "Add TMDb API key in tmdb-config.js");
-        renderRailMessage("topratedmovies", "Add TMDb API key in tmdb-config.js");
-        renderRailMessage("popularseries", "Add TMDb API key in tmdb-config.js");
-        renderRailMessage("populartv", "Add TMDb API key in tmdb-config.js");
-        renderRailMessage("topratedtv", "Add TMDb API key in tmdb-config.js");
-        renderRailMessage("airingtv", "Add TMDb API key in tmdb-config.js");
-        return;
-    }
-
     await Promise.all([
-        loadTmdbRail("/trending/movie/day", "trendingmovies", tmdbApiKey),
-        loadTmdbRail("/movie/now_playing", "nowplayingmovies", tmdbApiKey),
-        loadTmdbRail("/movie/upcoming", "upcomingmovies", tmdbApiKey),
-        loadTmdbRail("/movie/top_rated", "topratedmovies", tmdbApiKey),
-        loadTmdbRail("/trending/tv/day", "popularseries", tmdbApiKey),
-        loadTmdbRail("/tv/popular", "populartv", tmdbApiKey),
-        loadTmdbRail("/tv/top_rated", "topratedtv", tmdbApiKey),
-        loadTmdbRail("/tv/on_the_air", "airingtv", tmdbApiKey)
+        loadTmdbRail("/trending/movie/day", "trendingmovies"),
+        loadTmdbRail("/movie/now_playing", "nowplayingmovies"),
+        loadTmdbRail("/movie/upcoming", "upcomingmovies"),
+        loadTmdbRail("/movie/top_rated", "topratedmovies"),
+        loadTmdbRail("/trending/tv/day", "popularseries"),
+        loadTmdbRail("/tv/popular", "populartv"),
+        loadTmdbRail("/tv/top_rated", "topratedtv"),
+        loadTmdbRail("/tv/on_the_air", "airingtv")
     ]);
 }
 
-async function loadTmdbRail(endpoint, listElementId, apiKey) {
+async function loadTmdbRail(endpoint, listElementId) {
     const movieList = document.getElementById(listElementId);
     if (!movieList) {
         return;
     }
 
     try {
-        const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${apiKey}`);
+        const response = await fetch(`${TMDB_BASE_URL}${endpoint}`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
@@ -291,7 +265,8 @@ function openHomeRailMovie(cardEl) {
     localStorage.setItem("tmdbMovieID", tmdbId);
     localStorage.setItem("tmdbMediaType", mediaType);
     localStorage.removeItem("movieID");
-    window.location.href = "movies.html";
+    localStorage.removeItem("selectedMovieID");
+    window.location.href = `movies.html?tmdb=${encodeURIComponent(tmdbId)}&type=${encodeURIComponent(mediaType)}`;
 }
 
 async function resolveImdbId(tmdbId, mediaType) {
@@ -304,14 +279,9 @@ async function resolveImdbId(tmdbId, mediaType) {
         return imdbCache.get(cacheKey);
     }
 
-    const apiKey = getTmdbApiKey();
-    if (!apiKey) {
-        return "";
-    }
-
     try {
         if (mediaType === "tv") {
-            const tvResponse = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}/external_ids?api_key=${apiKey}`);
+            const tvResponse = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}/external_ids`);
             if (!tvResponse.ok) {
                 imdbCache.set(cacheKey, "");
                 return "";
@@ -323,7 +293,7 @@ async function resolveImdbId(tmdbId, mediaType) {
             return tvImdb;
         }
 
-        const movieResponse = await fetch(`${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${apiKey}`);
+        const movieResponse = await fetch(`${TMDB_BASE_URL}/movie/${tmdbId}`);
         if (!movieResponse.ok) {
             imdbCache.set(cacheKey, "");
             return "";
@@ -493,14 +463,8 @@ function renderRailMessage(listElementId, message) {
 }
 
 async function fetchTrendingMoviesForHomepage() {
-    const apiKey = getTmdbApiKey();
-    if (!apiKey) {
-        console.warn("TMDb API key not configured. Using fallback content.");
-        return null;
-    }
-
     try {
-        const response = await fetch(`${TMDB_BASE_URL}/trending/movie/week?api_key=${apiKey}`);
+        const response = await fetch(`${TMDB_BASE_URL}/trending/movie/week`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
@@ -516,7 +480,7 @@ async function fetchTrendingMoviesForHomepage() {
         const contentArray = await Promise.all(movies.map(async (movie) => {
             let logoUrl = "";
             try {
-                const detailsResponse = await fetch(`${TMDB_BASE_URL}/movie/${movie.id}?api_key=${apiKey}&append_to_response=images`);
+                const detailsResponse = await fetch(`${TMDB_BASE_URL}/movie/${movie.id}?append_to_response=images`);
                 if (detailsResponse.ok) {
                     const details = await detailsResponse.json();
                     const logos = details.images && Array.isArray(details.images.logos) ? details.images.logos : [];
@@ -569,7 +533,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.setItem('tmdbMediaType', 'movie');
         localStorage.removeItem('movieID');
         localStorage.removeItem('selectedMovieID');
-        window.location.href = 'movies.html';
+        window.location.href = `movies.html?tmdb=${encodeURIComponent(tmdbId)}&type=movie`;
     }
 
     async function loadFiscusPosterImages() {
@@ -580,12 +544,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const movieItems = fiscusList.querySelectorAll('.movie-poster-box');
-        const apiKey = getTmdbApiKey();
-        if (!apiKey) {
-            console.error('No TMDB API key found');
-            return;
-        }
-
         const safePlayIcon = escapeHtml(HOME_ACTION_ICONS.watch);
         const safeWatchlistIcon = escapeHtml(HOME_ACTION_ICONS.watchlist);
         const safeFavoriteIcon = escapeHtml(HOME_ACTION_ICONS.favorite);
@@ -599,7 +557,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             let matchedMovie = null;
             try {
-                const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieTitle)}&language=en-US`;
+                const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(movieTitle)}&language=en-US`;
                 const response = await fetch(searchUrl);
                 if (response.ok) {
                     const data = await response.json();
@@ -695,13 +653,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         try {
-            const apiKey = getTmdbApiKey();
-            if (!apiKey) {
-                console.warn('TMDB API key not found');
-                return;
-            }
-
-            const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(movieTitle)}&language=en-US`;
+            const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(movieTitle)}&language=en-US`;
             const response = await fetch(searchUrl);
             
             if (!response.ok) {
@@ -809,7 +761,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 bodyPoster.style.backgroundSize = "cover";
                 bodyPoster.style.backgroundPosition = "center";
             } else {
-                bodyPoster.style.backgroundImage = "linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%), url(./images/500daysofsummer.avif)";
+                bodyPoster.style.backgroundImage = "linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%), url(/assets/posters/500daysofsummer.avif)";
             }
         }
 
@@ -865,12 +817,7 @@ const resultGrid = document.getElementById('result-grid');
 
 
 async function loadMovies(searchTerm){
-    const tmdbApiKey = getTmdbApiKey();
-    if (!tmdbApiKey) {
-        return;
-    }
-
-    const URL = `${TMDB_BASE_URL}/search/multi?api_key=${tmdbApiKey}&query=${encodeURIComponent(searchTerm)}&include_adult=false&page=1`;
+    const URL = `${TMDB_BASE_URL}/search/multi?query=${encodeURIComponent(searchTerm)}&include_adult=false&page=1`;
     const res = await fetch(URL);
     const data = await res.json();
     const mediaResults = (data.results || []).filter((item) => item.media_type === 'movie' || item.media_type === 'tv');
@@ -959,7 +906,8 @@ function loadMovieDetails() {
             localStorage.setItem('tmdbMovieID', movie.dataset.id);
             localStorage.setItem('tmdbMediaType', movie.dataset.mediaType || 'movie');
             localStorage.removeItem('movieID');
-            window.location.href = 'movies.html';
+            localStorage.removeItem('selectedMovieID');
+            window.location.href = `movies.html?tmdb=${encodeURIComponent(movie.dataset.id)}&type=${encodeURIComponent(movie.dataset.mediaType || 'movie')}`;
         });
     });
 }

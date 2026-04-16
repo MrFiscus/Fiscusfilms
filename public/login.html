@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FiscusFilms Login</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
   </style>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
   </style>
-  <link rel="icon" type="image/png" href="./image-removebg-preview (1).png">
+  <link rel="icon" type="image/png" href="/assets/image-removebg-preview (1).png">
 </head>
 <body class="login-view">
   <div class="body-movie-poster">
     <div class="nav-bar" id="navbar">
       <div class="logo">
-        <img class="logo" src="./image-removebg-preview (1).png" alt="FiscusFilms logo">
+        <img class="logo" src="/assets/image-removebg-preview (1).png" alt="FiscusFilms logo">
         <a href="index.html"><h1 class="title">FiscusFilms</h1></a>
       </div>
       <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
@@ -57,7 +57,7 @@
 
         <div class="auth-controls">
           <a id="profile-link" class="profile-link" href="login.html" aria-label="Open profile">
-            <img class="profile-avatar" src="./user.png" alt="Profile">
+            <img class="profile-avatar" src="/assets/user.png" alt="Profile">
           </a>
         </div>
       </ul>
@@ -109,11 +109,13 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
-    <script src="tmdb-config.js"></script>
-    <script src="moviepagescript.js"></script>
-    <script src="supabase-auth-watchlist.js"></script>
-    <script src="navbar.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/realtime-client.js"></script>
+    <script src="/js/supabase-config.js"></script>
+    <script src="/js/tmdb-config.js"></script>
+    <script src="/js/moviepagescript.js"></script>
+    <script src="/js/supabase-auth-watchlist.js"></script>
+    <script src="/js/navbar.js"></script>
 
     <!-- OAuth Callback Handler -->
     <script>
