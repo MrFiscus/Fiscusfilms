@@ -180,6 +180,12 @@ const HOME_ACTION_ICONS = {
 };
 const imdbCache = new Map();
 
+function finishAppLoading() {
+    document.body.classList.remove("loading-view");
+}
+
+window.setTimeout(finishAppLoading, 4500);
+
 async function loadHomeMovieRails() {
     renderRailMessage("trendingmovies", "Loading Trending Today...");
     renderRailMessage("nowplayingmovies", "Loading Now Playing...");
@@ -758,6 +764,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.searchAndNavigateToMovie = searchAndNavigateToMovie;
 
     updateSlide();
+    finishAppLoading();
     loadFiscusPosterImages();
 });
 

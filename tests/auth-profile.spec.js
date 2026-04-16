@@ -211,6 +211,15 @@ test("home hero does not flash stale fallback movie while loading", async ({ pag
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
+  await expect(page.locator("#app-loading-screen")).toBeVisible();
   await expect(page.locator(".body-main")).toContainText("Loading featured movies...");
   await expect(page.locator(".body-main")).not.toContainText("500 Days of Summer");
+});
+
+test("profile loading screen clears after profile state resolves", async ({ page }) => {
+  await page.goto("/profile");
+
+  await expect(page.locator("#app-loading-screen")).toBeHidden();
+  await expect(page.locator("body")).not.toHaveClass(/loading-view/);
+  await expect(page.locator("#profile-auth-status")).toContainText("Sign in to view your profile insights.");
 });

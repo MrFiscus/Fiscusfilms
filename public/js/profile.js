@@ -46,6 +46,12 @@
   let pendingAvatarSource = "";
   let profileBackdropTimer = null;
 
+  function finishAppLoading() {
+    document.body.classList.remove("loading-view");
+  }
+
+  window.setTimeout(finishAppLoading, 4500);
+
   function setStatus(message) {
     if (authStatusEl) {
       authStatusEl.textContent = message;
@@ -1042,6 +1048,7 @@
     await refreshCollections();
     pendingAvatarSource = "";
     setSaveMessage("", false);
+    finishAppLoading();
   }
 
   async function saveProfile(event) {
@@ -1254,6 +1261,7 @@
       setStatus("Configure Supabase to enable profile settings.");
       setSaveMessage("Supabase is not configured.", true);
       await refreshCollections();
+      finishAppLoading();
       return;
     }
 
@@ -1282,6 +1290,7 @@
     }
 
     await loadSession();
+    finishAppLoading();
 
     supabaseClient.auth.onAuthStateChange(async () => {
       await loadSession();
