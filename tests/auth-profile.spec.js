@@ -198,3 +198,19 @@ test("movie details prefer clicked TMDB id over stale stored IMDb id", async ({ 
   await expect.poll(async () => page.evaluate(() => window.localStorage.getItem("movieID"))).toBeNull();
   await expect.poll(async () => page.evaluate(() => window.localStorage.getItem("selectedMovieID"))).toBeNull();
 });
+
+test("home hero does not flash stale fallback movie while loading", async ({ page }) => {
+  await page.route("**/api/tmdb/trending/movie/week", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    await route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: false })
+    });
+  });
+
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  await expect(page.locator(".body-main")).toContainText("Loading featured movies...");
+  await expect(page.locator(".body-main")).not.toContainText("500 Days of Summer");
+});

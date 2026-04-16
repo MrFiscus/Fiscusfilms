@@ -681,69 +681,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     let contentArray = await fetchTrendingMoviesForHomepage();
     
     if (!contentArray) {
-        // Fallback content if API fails
         contentArray = [
             {
                 tmdbId: null,
-                title: "500 Days of Summer",
-                rating: "7.7/10",
-                description: "Tom, greeting-card writer and hopeless romantic, is caught completely off-guard when his girlfriend, Summer, suddenly dumps him. He reflects on their 500 days together to try to figure out where their love affair went sour, and in doing so, Tom rediscovers his true passions in life.",
-                backdropPath: "",
-                logoUrl: ""
-            },
-            {
-                tmdbId: null,
-                title: "Whiplash",
-                rating: "8.5/10",
-                description: "Under the direction of a ruthless instructor, a talented young drummer begins to pursue perfection at any cost, even his humanity.",
-                backdropPath: "",
-                logoUrl: ""
-            },
-            {
-                tmdbId: null,
-                title: "Everything Everywhere All at Once",
-                rating: "7.8/10",
-                description: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what's important to her by connecting with the lives she could have led in other universes.",
-                backdropPath: "",
-                logoUrl: ""
-            },
-            {
-                tmdbId: null,
-                title: "Joker: Folie à Deux",
-                rating: "5.2/10",
-                description: "While struggling with his dual identity, Arthur Fleck not only stumbles upon true love, but also finds the music that's always been inside him.",
-                backdropPath: "",
-                logoUrl: ""
-            },
-            {
-                tmdbId: null,
-                title: "Past Lives",
-                rating: "7.8/10",
-                description: "Nora and Hae Sung, two childhood friends, are reunited in New York for one fateful week as they confront notions of destiny, love, and the choices that make a life.",
-                backdropPath: "",
-                logoUrl: ""
-            },
-            {
-                tmdbId: null,
-                title: "Miracle in Cell no 7",
-                rating: "8.2/10",
-                description: "Separated from his daughter, a father with an intellectual disability must prove his innocence when he is jailed for the death of a commander's child.",
-                backdropPath: "",
-                logoUrl: ""
-            },
-            {
-                tmdbId: null,
-                title: "The Perks of Being a Wallflower",
-                rating: "7.9/10",
-                description: "Pittsburgh, Pennsylvania, 1991. High school freshman Charlie is a wallflower, always watching life from the sidelines, until two senior students, Sam and her stepbrother Patrick, become his mentors, helping him discover the joys of friendship, music and love.",
-                backdropPath: "",
-                logoUrl: ""
-            },
-            {
-                tmdbId: null,
-                title: "Memories of Murder",
-                rating: "8.1/10",
-                description: "During the late 1980s, two detectives in a South Korean province attempt to solve the nation's first series of rape-and-murder cases.",
+                title: "Featured movies unavailable",
+                rating: "Try refreshing shortly",
+                description: "We could not load the latest movie picks right now.",
                 backdropPath: "",
                 logoUrl: ""
             }
@@ -753,6 +696,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function updateSlide() {
         const content = contentArray[currentSlide - 1];
+        const hasMovieTarget = Boolean(content.tmdbId);
+        const ratingText = hasMovieTarget ? `Rating: ${content.rating}` : content.rating;
+        const actionButtons = hasMovieTarget
+            ? `
+                <button class="body-button" onclick="window.carouselNavigateToMovie(${content.tmdbId})"><span class="button-body-text">Play Now</span></button>
+                <button class="body-button2" onclick="window.carouselNavigateToMovie(${content.tmdbId})"><span class="button-body-text">More Info</span></button>
+            `
+            : `
+                <button class="body-button" type="button" disabled><span class="button-body-text">Unavailable</span></button>
+                <button class="body-button2" type="button" disabled><span class="button-body-text">Try Again</span></button>
+            `;
         
         if (bodyPoster) {
             if (content.backdropPath) {
@@ -761,17 +715,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 bodyPoster.style.backgroundSize = "cover";
                 bodyPoster.style.backgroundPosition = "center";
             } else {
-                bodyPoster.style.backgroundImage = "linear-gradient(94deg, rgba(13,27,42,0.8842130602240896) 62%, rgba(119,141,169,0.5648853291316527) 94%), url(/assets/posters/500daysofsummer.avif)";
+                bodyPoster.style.backgroundImage = "linear-gradient(94deg, rgba(13,27,42,0.94) 62%, rgba(65,90,119,0.48) 94%)";
             }
         }
 
         bodyMainDiv.innerHTML = `
             <div class="body-title">${content.logoUrl ? `<img class="movie-hero-logo" src="${content.logoUrl}" alt="${content.title} logo" style="max-width: 100%; max-height: 150px; object-fit: contain;">` : `<h1>${content.title}</h1>`}</div>
-            <div class="body-rating"><h1>Rating: ${content.rating}</h1></div>
+            <div class="body-rating"><h1>${ratingText}</h1></div>
             <div class="body-description"><p>${content.description}</p></div>
             <div class="body-buttons">
-                <button class="body-button" onclick="window.carouselNavigateToMovie(${content.tmdbId})"><span class="button-body-text">Play Now</span></button>
-                <button class="body-button2" onclick="window.carouselNavigateToMovie(${content.tmdbId})"><span class="button-body-text">More Info</span></button>
+                ${actionButtons}
             </div>
         `;
     }
