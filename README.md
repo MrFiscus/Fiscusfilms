@@ -68,11 +68,12 @@ FiscusFilms/
    cp .env.example .env
    ```
 
-3. Add your TMDB API key to `.env`:
+3. Add your TMDB credentials to `.env`:
 
    ```env
    PORT=3000
    TMDB_API_KEY=your_tmdb_api_key_here
+   TMDB_READ_ACCESS_TOKEN=your_tmdb_read_access_token_here
    ```
 
 4. Run the app in development:
@@ -123,6 +124,7 @@ Create `.env` from `.env.example`. Do not commit `.env`.
 | --- | --- | --- |
 | `PORT` | No | Local server port. Defaults to `3000`. |
 | `TMDB_API_KEY` | Yes | TMDB API key used by the backend proxy. |
+| `TMDB_READ_ACCESS_TOKEN` | No | Optional TMDB v4 read access token. Keep it in `.env` or your host's environment variables if you use TMDB endpoints that require bearer auth. |
 
 ## Notes Before Pushing
 
