@@ -199,6 +199,72 @@ test("movie details prefer clicked TMDB id over stale stored IMDb id", async ({ 
   await expect.poll(async () => page.evaluate(() => window.localStorage.getItem("selectedMovieID"))).toBeNull();
 });
 
+test("recommended movie cards open the selected recommendation", async ({ page }) => {
+  await page.route("**/api/tmdb/movie/238?**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: 238,
+        title: "The Godfather",
+        release_date: "1972-03-14",
+        vote_average: 8.7,
+        overview: "The aging patriarch of an organized crime dynasty transfers control to his reluctant son.",
+        poster_path: null,
+        backdrop_path: null,
+        genres: [{ name: "Drama" }],
+        credits: { cast: [] },
+        external_ids: { imdb_id: "tt0068646" },
+        "watch/providers": { results: {} },
+        videos: { results: [] },
+        recommendations: {
+          results: [
+            {
+              id: 155,
+              title: "The Dark Knight",
+              release_date: "2008-07-18",
+              poster_path: "/dark-knight.jpg"
+            }
+          ]
+        },
+        images: { logos: [] }
+      })
+    });
+  });
+
+  await page.route("**/api/tmdb/movie/155?**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: 155,
+        title: "The Dark Knight",
+        release_date: "2008-07-18",
+        vote_average: 8.5,
+        overview: "Batman faces the Joker.",
+        poster_path: null,
+        backdrop_path: null,
+        genres: [{ name: "Action" }],
+        credits: { cast: [] },
+        external_ids: { imdb_id: "tt0468569" },
+        "watch/providers": { results: {} },
+        videos: { results: [] },
+        recommendations: { results: [] },
+        images: { logos: [] }
+      })
+    });
+  });
+
+  await page.goto("/movies.html?tmdb=238&type=movie");
+
+  await expect(page.locator(".movie-title")).toContainText("The Godfather");
+  await page.locator(".recommended-item-link").first().click();
+
+  await expect(page).toHaveURL(/movies\.html\?tmdb=155&type=movie$/);
+  await expect(page.locator(".movie-title")).toContainText("The Dark Knight");
+  await expect.poll(async () => page.evaluate(() => window.localStorage.getItem("tmdbMovieID"))).toBe("155");
+});
+
 test("home hero does not flash stale fallback movie while loading", async ({ page }) => {
   await page.route("**/api/tmdb/trending/movie/week", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 2500));
