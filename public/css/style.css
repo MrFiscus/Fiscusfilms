@@ -174,7 +174,6 @@ html {
 
 #popularmovies,
 #popularseries,
-#popularfiscus,
 #watchlist {
   scroll-margin-top: 88px;
 }
@@ -1098,79 +1097,6 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
 }
 
 .slider-container:hover .series-slider-button {
-  opacity: 0.6;
-}
-
-/* fiscus recomen */
-
-.fiscus-recomen-body {
-  background-color: var(--primary-color);
-  height: 55vh;
-  width: 100%;
-}
-.fiscus-recomen-seriesbox {
-  width: 100%;
-  height: calc(var(--list-card-height) + 2vh);
-  margin: 0 auto;
-  padding: 0 var(--slider-side-space);
-  box-sizing: border-box;
-  overflow: hidden;
-  
-}
-
-.fiscus-list {
-  display: flex;
-  transition: transform 0.5s ease;
-  list-style: none;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-}
-
-
-/* Position for previous button */
-#fiscus-prev-slide {
-  left: 0px;
-}
-
-/* Position for next button */
-#fiscus-next-slide {
-  right:0px;
-}
-
-#fiscus-recomen-title {
-  z-index: 1;
-  color: rgb(201, 198, 198);
-  position: relative;
-  padding-left: 60px;
-  font-size: 25px;
-  font-family: "Oswald", sans-serif;
-  font-weight: 300;
-  padding-bottom: 10px;
-  padding-top: 20px;
-}
-
-.fiscus-slider-button {
-  background-color: var(--md-dark-color);
-  opacity: 0; /* Hide the button initially */
-  color: #ffffff;
-  border: none;
-  cursor: pointer;
-  padding: 15px;
-  font-size: 25px;
-  position: absolute;
-  top: calc(50% - 5px);
-  transform: translateY(-50%);
-  z-index: 2;
-  scale: 1;
-  transition: opacity 0.8s ease, box-shadow 0.8s ease;
-  height: var(--list-card-height);
-  width: 45px;
-  
-  
-}
-
-.slider-container:hover .fiscus-slider-button {
   opacity: 0.6;
 }
 
@@ -3170,8 +3096,7 @@ border: 1px solid white;
   }
 
   .movie-recomen-body,
-  .series-recomen-body,
-  .fiscus-recomen-body {
+  .series-recomen-body {
     height: auto;
     min-height: 44vh;
     padding-bottom: 16px;
@@ -3343,8 +3268,7 @@ border: 1px solid white;
   }
 
   .slider-button,
-  .series-slider-button,
-  .fiscus-slider-button {
+  .series-slider-button {
     opacity: 0.5;
     width: 38px;
   }
@@ -3390,8 +3314,7 @@ border: 1px solid white;
   #series-recomen-title,
   #popular-tv-title,
   #toprated-tv-title,
-  #airing-tv-title,
-  #fiscus-recomen-title {
+  #airing-tv-title {
     padding-left: 20px;
     font-size: 22px;
   }
@@ -3419,15 +3342,13 @@ border: 1px solid white;
   }
 
   .movie-recomen-moviesbox,
-  .series-recomen-seriesbox,
-  .fiscus-recomen-seriesbox {
+  .series-recomen-seriesbox {
     width: 100%;
     padding: 0 var(--slider-side-space);
   }
 
   .slider-button,
-  .series-slider-button,
-  .fiscus-slider-button {
+  .series-slider-button {
     width: 34px;
     padding: 10px;
     font-size: 18px;
@@ -3663,8 +3584,7 @@ border: 1px solid white;
   }
 
   .movie-recomen-moviesbox,
-  .series-recomen-seriesbox,
-  .fiscus-recomen-seriesbox {
+  .series-recomen-seriesbox {
     padding: 0 var(--slider-side-space);
   }
 

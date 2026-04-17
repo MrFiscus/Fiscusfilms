@@ -149,7 +149,7 @@
 
                 if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
                     const cardImage = linkEl.querySelector('.recon-poster');
-                    window.FiscusAuth.addSearchHistory({
+                    await window.FiscusAuth.addSearchHistory({
                         tmdb_id: selectedId,
                         media_type: selectedType,
                         title: cardImage ? cardImage.alt : 'Unknown',
@@ -445,7 +445,7 @@
                         likeButton.setAttribute('aria-pressed', 'true');
                     }
 
-                    likeButton.addEventListener('click', () => {
+                    likeButton.addEventListener('click', async () => {
                         if (!window.FiscusAuth || !window.FiscusAuth.toggleFavoriteMovie || !window.FiscusAuth.isAuthenticated) {
                             actionMessage.textContent = 'Profile features are not configured yet.';
                             return;
@@ -456,7 +456,7 @@
                             return;
                         }
 
-                        const result = window.FiscusAuth.toggleFavoriteMovie({
+                        const result = await window.FiscusAuth.toggleFavoriteMovie({
                             imdb_id: watchlistKey,
                             title: displayTitle,
                             year: releaseYear,
@@ -666,7 +666,7 @@
                             }
 
                             if (action === 'favorite' && window.FiscusAuth.toggleFavoriteMovie) {
-                                const result = window.FiscusAuth.toggleFavoriteMovie(payload);
+                                const result = await window.FiscusAuth.toggleFavoriteMovie(payload);
                                 if (result && result.ok) {
                                     actionBtn.setAttribute('aria-pressed', result.liked ? 'true' : 'false');
                                 }

@@ -163,32 +163,6 @@
     });
   }
 
-  function getStorageScopeKey() {
-    return currentUser && currentUser.id ? currentUser.id : "guest";
-  }
-
-  function getCollectionStorageKey(collectionName) {
-    return `fiscus:${collectionName}:${getStorageScopeKey()}`;
-  }
-
-  function readCollection(collectionName) {
-    const raw = localStorage.getItem(getCollectionStorageKey(collectionName));
-    if (!raw) {
-      return [];
-    }
-
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function writeCollection(collectionName, items) {
-    localStorage.setItem(getCollectionStorageKey(collectionName), JSON.stringify(items));
-  }
-
   function buildTmdbBackdropUrl(backdropPath, size) {
     if (!backdropPath) {
       return "";
@@ -531,24 +505,6 @@
     }
   }
 
-  function matchesHistoryItem(item, cardEl) {
-    const tmdbId = cardEl.dataset.tmdbId || "";
-    const imdbId = cardEl.dataset.imdbId || "";
-    const title = cardEl.dataset.title || "";
-    const year = cardEl.dataset.year || "";
-
-    if (tmdbId && String(item.tmdb_id || "") === tmdbId) {
-      return true;
-    }
-    if (imdbId && String(item.imdb_id || item.imdbID || "") === imdbId) {
-      return true;
-    }
-
-    const itemTitle = String(item.title || item.name || "");
-    const itemYear = extractYear(item);
-    return itemTitle === title && String(itemYear) === String(year);
-  }
-
   async function removeCardItem(cardEl) {
     const listType = cardEl.dataset.listType || "";
     const imdbId = cardEl.dataset.imdbId || "";
@@ -569,26 +525,38 @@
     }
 
     if (listType === "favorites") {
-      const favorites = readCollection("favorites");
-      const next = favorites.filter((item) => !matchesHistoryItem(item, cardEl));
-      writeCollection("favorites", next);
+      if (!window.FiscusAuth || !window.FiscusAuth.removeFavoriteMovie || !imdbId) {
+        return;
+      }
+
+      await window.FiscusAuth.removeFavoriteMovie(imdbId);
       await refreshCollections();
       return;
     }
 
     if (listType === "history") {
-      const history = readCollection("history");
-      const next = history.filter((item) => !matchesHistoryItem(item, cardEl));
-      writeCollection("history", next);
+      if (!window.FiscusAuth || !window.FiscusAuth.removeSearchHistoryItem) {
+        return;
+      }
+
+      await window.FiscusAuth.removeSearchHistoryItem({
+        tmdb_id: cardEl.dataset.tmdbId || "",
+        imdb_id: cardEl.dataset.imdbId || "",
+        title: cardEl.dataset.title || "Untitled",
+        year: cardEl.dataset.year || ""
+      });
       await refreshCollections();
     }
   }
 
   function buildMovieFromCard(cardEl) {
     const posterEl = cardEl.querySelector(".recon-poster");
+    const tmdbId = cardEl.dataset.tmdbId || "";
+    const imdbId = cardEl.dataset.imdbId || (tmdbId ? `tmdb:${tmdbId}` : "");
+
     return {
-      imdb_id: cardEl.dataset.imdbId || "",
-      tmdb_id: cardEl.dataset.tmdbId || "",
+      imdb_id: imdbId,
+      tmdb_id: tmdbId,
       title: cardEl.dataset.title || "Untitled",
       year: cardEl.dataset.year || "",
       poster: posterEl ? posterEl.src : FALLBACK_POSTER,
@@ -640,7 +608,7 @@
       return;
     }
 
-    const result = window.FiscusAuth.toggleFavoriteMovie(movie);
+    const result = await window.FiscusAuth.toggleFavoriteMovie(movie);
     if (result && result.message) {
       setSaveMessage(result.message, !result.ok);
     }
@@ -962,6 +930,10 @@
   }
 
   async function refreshCollections() {
+    if (window.FiscusAuth && window.FiscusAuth.refreshProfileCollections) {
+      await window.FiscusAuth.refreshProfileCollections();
+    }
+
     const favorites = normalizeLocalItems(
       window.FiscusAuth && window.FiscusAuth.getFavorites ? window.FiscusAuth.getFavorites() : []
     );

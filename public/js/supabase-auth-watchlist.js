@@ -36,6 +36,8 @@
 
   let supabaseClient = null;
   let currentUser = null;
+  let favoritesCache = [];
+  let searchHistoryCache = [];
   let authMode = "signup";
   let pendingVerificationEmail = "";
   let resolveAuthReady = null;
@@ -438,39 +440,12 @@
     }
   }
 
-  function getStorageScopeKey() {
-    return currentUser && currentUser.id ? currentUser.id : "guest";
-  }
-
-  function getCollectionStorageKey(collectionName) {
-    return `fiscus:${collectionName}:${getStorageScopeKey()}`;
-  }
-
-  function readCollection(collectionName) {
-    const raw = localStorage.getItem(getCollectionStorageKey(collectionName));
-    if (!raw) {
-      return [];
-    }
-
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      console.warn(`Invalid ${collectionName} storage payload`, error);
-      return [];
-    }
-  }
-
-  function writeCollection(collectionName, items) {
-    localStorage.setItem(getCollectionStorageKey(collectionName), JSON.stringify(items));
-  }
-
   function getFavorites() {
-    return readCollection("favorites");
+    return favoritesCache.slice();
   }
 
   function getSearchHistory() {
-    return readCollection("history");
+    return searchHistoryCache.slice();
   }
 
   function isFavoriteMovie(movieId) {
@@ -481,49 +456,147 @@
     return getFavorites().some((item) => item.imdb_id === movieId);
   }
 
-  function toggleFavoriteMovie(movie) {
+  async function loadFavoritesFromSupabase() {
+    if (!supabaseClient || !currentUser) {
+      favoritesCache = [];
+      return favoritesCache;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("favorites")
+      .select("imdb_id, tmdb_id, title, year, poster, added_at")
+      .eq("user_id", currentUser.id)
+      .order("added_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load favorites:", error.message);
+      favoritesCache = [];
+      return favoritesCache;
+    }
+
+    favoritesCache = (data || []).slice(0, SEARCH_HISTORY_LIMIT);
+    return getFavorites();
+  }
+
+  async function loadSearchHistoryFromSupabase() {
+    if (!supabaseClient || !currentUser) {
+      searchHistoryCache = [];
+      return searchHistoryCache;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("search_history")
+      .select("tmdb_id, imdb_id, title, year, poster, media_type, searched_at")
+      .eq("user_id", currentUser.id)
+      .order("searched_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load search history:", error.message);
+      searchHistoryCache = [];
+      return searchHistoryCache;
+    }
+
+    searchHistoryCache = (data || []).slice(0, SEARCH_HISTORY_LIMIT);
+    return getSearchHistory();
+  }
+
+  async function refreshProfileCollections() {
+    try {
+      await Promise.all([
+        loadFavoritesFromSupabase(),
+        loadSearchHistoryFromSupabase()
+      ]);
+    } catch (error) {
+      console.error("Profile collection refresh failed:", error);
+    }
+
+    return {
+      favorites: getFavorites(),
+      history: getSearchHistory()
+    };
+  }
+
+  async function removeFavoriteMovie(movieId) {
+    if (!supabaseClient || !currentUser || !movieId) {
+      return { ok: false, message: "Please sign in first." };
+    }
+
+    const { error } = await supabaseClient
+      .from("favorites")
+      .delete()
+      .eq("user_id", currentUser.id)
+      .eq("imdb_id", movieId);
+
+    if (error) {
+      console.error("Remove favorite failed:", error.message);
+      return { ok: false, message: "Could not remove favorite." };
+    }
+
+    favoritesCache = favoritesCache.filter((item) => item.imdb_id !== movieId);
+    emitRealtimeAppEvent("favorite:toggle", {
+      userId: currentUser.id,
+      imdbId: movieId,
+      liked: false
+    });
+    return { ok: true, liked: false, message: "Removed from favorites." };
+  }
+
+  async function toggleFavoriteMovie(movie) {
     if (!movie || !movie.imdb_id) {
       return { ok: false, liked: false, message: "Invalid movie data." };
+    }
+
+    if (!supabaseClient || !currentUser) {
+      return { ok: false, liked: false, message: "Please sign in first." };
     }
 
     const favorites = getFavorites();
     const existingIndex = favorites.findIndex((item) => item.imdb_id === movie.imdb_id);
 
     if (existingIndex >= 0) {
-      favorites.splice(existingIndex, 1);
-      writeCollection("favorites", favorites);
-      emitRealtimeAppEvent("favorite:toggle", {
-        userId: currentUser && currentUser.id ? currentUser.id : "guest",
-        imdbId: movie.imdb_id,
-        liked: false
-      });
-      return { ok: true, liked: false, message: "Removed from favorites." };
+      return removeFavoriteMovie(movie.imdb_id);
     }
 
-    favorites.unshift({
+    const payload = {
+      user_id: currentUser.id,
       imdb_id: movie.imdb_id,
       title: movie.title,
       year: movie.year,
       poster: movie.poster,
       tmdb_id: movie.tmdb_id || null,
       added_at: new Date().toISOString()
-    });
+    };
 
-    writeCollection("favorites", favorites.slice(0, SEARCH_HISTORY_LIMIT));
+    const { error } = await supabaseClient
+      .from("favorites")
+      .upsert(payload, { onConflict: "user_id,imdb_id", ignoreDuplicates: false });
+
+    if (error) {
+      console.error("Add favorite failed:", error.message);
+      return { ok: false, liked: false, message: "Could not add favorite." };
+    }
+
+    favoritesCache = [payload, ...favorites.filter((item) => item.imdb_id !== movie.imdb_id)]
+      .slice(0, SEARCH_HISTORY_LIMIT);
     emitRealtimeAppEvent("favorite:toggle", {
-      userId: currentUser && currentUser.id ? currentUser.id : "guest",
+      userId: currentUser.id,
       imdbId: movie.imdb_id,
       liked: true
     });
     return { ok: true, liked: true, message: "Added to favorites." };
   }
 
-  function addSearchHistory(entry) {
+  async function saveSearchHistory(entry) {
     if (!entry) {
-      return;
+      return { ok: false };
+    }
+
+    if (!supabaseClient || !currentUser) {
+      return { ok: false, message: "Please sign in first." };
     }
 
     const nextEntry = {
+      user_id: currentUser.id,
       tmdb_id: entry.tmdb_id || null,
       imdb_id: entry.imdb_id || null,
       title: entry.title || "Unknown",
@@ -533,15 +606,84 @@
       searched_at: new Date().toISOString()
     };
 
-    const history = getSearchHistory();
     const dedupeKey = nextEntry.tmdb_id || nextEntry.imdb_id || `${nextEntry.title}:${nextEntry.year}`;
-    const deduped = history.filter((item) => {
+    let deleteQuery = supabaseClient
+      .from("search_history")
+      .delete()
+      .eq("user_id", currentUser.id);
+
+    if (nextEntry.tmdb_id) {
+      deleteQuery = deleteQuery.eq("tmdb_id", nextEntry.tmdb_id);
+    } else if (nextEntry.imdb_id) {
+      deleteQuery = deleteQuery.eq("imdb_id", nextEntry.imdb_id);
+    } else {
+      deleteQuery = deleteQuery
+        .eq("title", nextEntry.title)
+        .eq("year", nextEntry.year);
+    }
+
+    const { error: deleteError } = await deleteQuery;
+    if (deleteError) {
+      console.error("Search history dedupe failed:", deleteError.message);
+      return { ok: false, message: "Could not update search history." };
+    }
+
+    const { error } = await supabaseClient
+      .from("search_history")
+      .upsert(nextEntry);
+
+    if (error) {
+      console.error("Add search history failed:", error.message);
+      return { ok: false, message: "Could not update search history." };
+    }
+
+    const deduped = getSearchHistory().filter((item) => {
       const itemKey = item.tmdb_id || item.imdb_id || `${item.title}:${item.year}`;
       return itemKey !== dedupeKey;
     });
 
-    deduped.unshift(nextEntry);
-    writeCollection("history", deduped.slice(0, SEARCH_HISTORY_LIMIT));
+    searchHistoryCache = [nextEntry, ...deduped].slice(0, SEARCH_HISTORY_LIMIT);
+    return { ok: true };
+  }
+
+  async function addSearchHistory(entry) {
+    await waitUntilReady();
+    return saveSearchHistory(entry);
+  }
+
+  async function removeSearchHistoryItem(item) {
+    if (!supabaseClient || !currentUser || !item) {
+      return { ok: false, message: "Please sign in first." };
+    }
+
+    let query = supabaseClient
+      .from("search_history")
+      .delete()
+      .eq("user_id", currentUser.id);
+
+    if (item.tmdb_id) {
+      query = query.eq("tmdb_id", item.tmdb_id);
+    } else if (item.imdb_id) {
+      query = query.eq("imdb_id", item.imdb_id);
+    } else {
+      query = query
+        .eq("title", item.title || "Untitled")
+        .eq("year", item.year || "");
+    }
+
+    const { error } = await query;
+    if (error) {
+      console.error("Remove search history failed:", error.message);
+      return { ok: false, message: "Could not remove history item." };
+    }
+
+    const targetKey = item.tmdb_id || item.imdb_id || `${item.title || "Untitled"}:${item.year || ""}`;
+    searchHistoryCache = searchHistoryCache.filter((historyItem) => {
+      const itemKey = historyItem.tmdb_id || historyItem.imdb_id || `${historyItem.title}:${historyItem.year}`;
+      return itemKey !== targetKey;
+    });
+
+    return { ok: true, message: "Removed from history." };
   }
 
   function isAuthenticated() {
@@ -638,7 +780,7 @@
         return;
       }
 
-      const result = toggleFavoriteMovie(payload);
+      const result = await toggleFavoriteMovie(payload);
       if (result && result.ok) {
         actionBtn.setAttribute("aria-pressed", result.liked ? "true" : "false");
       }
@@ -1011,8 +1153,20 @@
       }
       updateProfileAvatar(resolveUserAvatar(currentUser));
       toggleAuthButtons(true);
-      await refreshWatchlist();
+      try {
+        await refreshProfileCollections();
+      } catch (error) {
+        console.error("Could not refresh Supabase profile collections:", error);
+      }
+
+      try {
+        await refreshWatchlist();
+      } catch (error) {
+        console.error("Could not refresh watchlist:", error);
+      }
     } else {
+      favoritesCache = [];
+      searchHistoryCache = [];
       setAuthStatus("Not signed in");
       updateProfileLinkDestination(false);
       if (profileLink) {
@@ -1104,7 +1258,12 @@
       });
     }
 
-    await updateSessionState();
+    try {
+      await updateSessionState();
+    } catch (error) {
+      console.error("Auth session setup failed:", error);
+      setAuthStatus("Signed in, but profile data could not load.");
+    }
 
     window.addEventListener("resize", updateWatchlistSliderVisibility);
 
@@ -1127,6 +1286,7 @@
         }
 
         if (payload.type === "favorite:toggle" && sameUser) {
+          await loadFavoritesFromSupabase();
           setAuthStatus(details.liked ? "Favorite added in another tab." : "Favorite removed in another tab.");
           return;
         }
@@ -1161,9 +1321,12 @@
     signOut,
     getFavorites,
     getSearchHistory,
+    refreshProfileCollections,
     isFavoriteMovie,
     toggleFavoriteMovie,
+    removeFavoriteMovie,
     addSearchHistory,
+    removeSearchHistoryItem,
     isAuthenticated,
     getSupabaseClient,
     getCurrentUser,

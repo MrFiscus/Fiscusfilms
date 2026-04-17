@@ -65,12 +65,12 @@ function displayMovieList(movies){
 function loadMovieDetails() {
     const searchListMovies = searchList.querySelectorAll('.search-list-item');
     searchListMovies.forEach(movie => {
-        movie.addEventListener('click', () => {
+        movie.addEventListener('click', async () => {
             const titleEl = movie.querySelector('.search-item-info h3');
             const yearEl = movie.querySelector('.search-item-info p');
             const posterEl = movie.querySelector('.search-item-thumbnail img');
             if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
-                window.FiscusAuth.addSearchHistory({
+                await window.FiscusAuth.addSearchHistory({
                     tmdb_id: movie.dataset.id,
                     media_type: movie.dataset.mediaType || 'movie',
                     title: titleEl ? titleEl.textContent : 'Unknown',

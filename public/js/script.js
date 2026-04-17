@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeHorizontalSlider(".popular-tv-list", "popular-tv-next-slide", "popular-tv-prev-slide");
     initializeHorizontalSlider(".toprated-tv-list", "toprated-tv-next-slide", "toprated-tv-prev-slide");
     initializeHorizontalSlider(".airing-tv-list", "airing-tv-next-slide", "airing-tv-prev-slide");
-    initializeHorizontalSlider(".fiscus-list", "fiscus-next-slide", "fiscus-prev-slide");
     loadHomeMovieRails();
 });
 
@@ -247,7 +246,7 @@ function escapeHtml(value) {
         .replaceAll("'", "&#39;");
 }
 
-function openHomeRailMovie(cardEl) {
+async function openHomeRailMovie(cardEl) {
     if (!cardEl) {
         return;
     }
@@ -259,7 +258,7 @@ function openHomeRailMovie(cardEl) {
     }
 
     if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
-        window.FiscusAuth.addSearchHistory({
+        await window.FiscusAuth.addSearchHistory({
             tmdb_id: tmdbId,
             media_type: mediaType,
             title: cardEl.dataset.movieTitle || "Unknown",
@@ -334,7 +333,7 @@ async function handleHomeRailAction(cardEl, action) {
     }
 
     if (action === "watch") {
-        openHomeRailMovie(cardEl);
+        await openHomeRailMovie(cardEl);
         return;
     }
 
@@ -368,7 +367,7 @@ async function handleHomeRailAction(cardEl, action) {
     }
 
     if (action === "favorite" && window.FiscusAuth && window.FiscusAuth.toggleFavoriteMovie) {
-        const result = window.FiscusAuth.toggleFavoriteMovie(moviePayload);
+        const result = await window.FiscusAuth.toggleFavoriteMovie(moviePayload);
         const btn = cardEl.querySelector('[data-action="favorite"]');
         if (btn && result && result.ok) {
             btn.setAttribute("aria-pressed", result.liked ? "true" : "false");
@@ -446,7 +445,7 @@ function renderTmdbMovieList(movieList, movies) {
             if (!cardEl) {
                 return;
             }
-            openHomeRailMovie(cardEl);
+            await openHomeRailMovie(cardEl);
         });
 
         movieList.dataset.actionsBound = "true";
@@ -540,116 +539,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.removeItem('movieID');
         localStorage.removeItem('selectedMovieID');
         window.location.href = `movies.html?tmdb=${encodeURIComponent(tmdbId)}&type=movie`;
-    }
-
-    async function loadFiscusPosterImages() {
-        const fiscusList = document.getElementById('popularfiscus');
-        if (!fiscusList) {
-            console.log('Fiscus list not found');
-            return;
-        }
-
-        const movieItems = fiscusList.querySelectorAll('.movie-poster-box');
-        const safePlayIcon = escapeHtml(HOME_ACTION_ICONS.watch);
-        const safeWatchlistIcon = escapeHtml(HOME_ACTION_ICONS.watchlist);
-        const safeFavoriteIcon = escapeHtml(HOME_ACTION_ICONS.favorite);
-
-        for (let i = 0; i < movieItems.length; i++) {
-            const item = movieItems[i];
-            const movieTitle = item.dataset.movieTitle;
-            if (!movieTitle) {
-                continue;
-            }
-
-            let matchedMovie = null;
-            try {
-                const searchUrl = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(movieTitle)}&language=en-US`;
-                const response = await fetch(searchUrl);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.results && data.results.length > 0) {
-                        matchedMovie = data.results[0];
-                    }
-                }
-            } catch (error) {
-                console.error(`Failed to load poster for ${movieTitle}:`, error);
-            }
-
-            const posterPath = matchedMovie && matchedMovie.poster_path
-                ? `${TMDB_IMAGE_BASE}${matchedMovie.poster_path}`
-                : 'https://via.placeholder.com/300x450?text=No+Poster';
-            const resolvedTitle = matchedMovie && matchedMovie.title ? matchedMovie.title : movieTitle;
-            const resolvedYear = matchedMovie && matchedMovie.release_date
-                ? matchedMovie.release_date.split('-')[0]
-                : '';
-            const resolvedTmdbId = matchedMovie && matchedMovie.id ? String(matchedMovie.id) : '';
-
-            item.classList.add('home-rail-card');
-            item.dataset.tmdbId = resolvedTmdbId;
-            item.dataset.mediaType = 'movie';
-            item.dataset.movieTitle = resolvedTitle;
-            item.dataset.movieYear = resolvedYear;
-            item.dataset.moviePoster = posterPath;
-
-            const safeTitle = escapeHtml(resolvedTitle);
-            const safeYear = escapeHtml(resolvedYear);
-            const safePoster = escapeHtml(posterPath);
-
-            item.innerHTML = `
-                <img class="recon-poster" src="${safePoster}" alt="${safeTitle}">
-                <div class="home-rail-overlay">
-                    <h3>${safeTitle}${safeYear ? ` (${safeYear})` : ''}</h3>
-                    <p>MOVIE</p>
-                    <div class="home-rail-actions">
-                        <button class="home-rail-icon-btn" type="button" data-action="watch" aria-label="Play now" title="Play now">
-                            <img src="${safePlayIcon}" alt="" loading="lazy">
-                        </button>
-                        <button class="home-rail-icon-btn" type="button" data-action="watchlist" aria-label="Add to watchlist" title="Add to watchlist" aria-pressed="false">
-                            <img src="${safeWatchlistIcon}" alt="" loading="lazy">
-                        </button>
-                        <button class="home-rail-icon-btn" type="button" data-action="favorite" aria-label="Add to favorite" title="Add to favorite" aria-pressed="false">
-                            <img src="${safeFavoriteIcon}" alt="" loading="lazy">
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            if (i < movieItems.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-        }
-
-        if (fiscusList.dataset.actionsBound !== 'true') {
-            fiscusList.addEventListener('click', async (event) => {
-                const actionBtn = event.target.closest('[data-action]');
-                const cardEl = event.target.closest('.home-rail-card');
-                if (!cardEl) {
-                    return;
-                }
-
-                if (actionBtn) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const action = actionBtn.dataset.action;
-
-                    if (action === 'watch' && !cardEl.dataset.tmdbId) {
-                        await searchAndNavigateToMovie(cardEl.dataset.movieTitle || '');
-                        return;
-                    }
-
-                    await handleHomeRailAction(cardEl, action);
-                    return;
-                }
-
-                if (cardEl.dataset.tmdbId) {
-                    openHomeRailMovie(cardEl);
-                } else {
-                    await searchAndNavigateToMovie(cardEl.dataset.movieTitle || '');
-                }
-            });
-
-            fiscusList.dataset.actionsBound = 'true';
-        }
     }
 
     async function searchAndNavigateToMovie(movieTitle) {
@@ -765,7 +654,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     updateSlide();
     finishAppLoading();
-    loadFiscusPosterImages();
 });
 
 
@@ -847,12 +735,12 @@ function displayMovieList(movies){
 function loadMovieDetails() {
     const searchListMovies = searchList.querySelectorAll('.search-list-item');
     searchListMovies.forEach(movie => {
-        movie.addEventListener('click', () => {
+        movie.addEventListener('click', async () => {
             const titleEl = movie.querySelector('.search-item-info h3');
             const yearEl = movie.querySelector('.search-item-info p');
             const posterEl = movie.querySelector('.search-item-thumbnail img');
             if (window.FiscusAuth && window.FiscusAuth.addSearchHistory) {
-                window.FiscusAuth.addSearchHistory({
+                await window.FiscusAuth.addSearchHistory({
                     tmdb_id: movie.dataset.id,
                     media_type: movie.dataset.mediaType || 'movie',
                     title: titleEl ? titleEl.textContent : 'Unknown',
